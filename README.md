@@ -2,7 +2,7 @@
 
 `Ticket Stamp` is a very fast and lightweight development flow that supports ticket driven staged workflows. Modules under active ticket development are automatically integrated into the current production application to create a unique and isolated application entry point.
 
-IThe `Ticket Stamp` system consists of a cloud service that orchestrates the creation and delivery of [Import Maps](https://wicg.github.io/import-maps/), and a CLI tool that is used by the developer to create a ticket workflow.
+The `Ticket Stamp` system consists of a cloud service that orchestrates the creation and delivery of [Import Maps](https://wicg.github.io/import-maps/), and a CLI tool that is used by the developer to create a ticket workflow.
 
 The workflow is staged, starting at `dev` where development and testing will be undertaken, before being promoted to `qa`. The application will then be QA tested before being further promoted to `prod`. The ticket is then closed and removed from the workflow system.
 
