@@ -14,17 +14,15 @@ const stamp = (data) => ({
 const list = (req, res) => {
   const { stage } = req.query;
   res.send(
-    log(
-      Object.entries(iepMap)
-        .filter(([ticket]) => !stage || ticket.startsWith(stage))
-        .reduce(
-          (acc, [ticket, data]) => ({
-            ...acc,
-            [ticket.split('/').pop()]: data,
-          }),
-          {}
-        )
-    )
+    Object.entries(iepMap)
+      .filter(([ticket]) => !stage || ticket.startsWith(stage))
+      .reduce(
+        (acc, [ticket, data]) => ({
+          ...acc,
+          [ticket.split('/').pop()]: data,
+        }),
+        {}
+      )
   );
 };
 
@@ -50,7 +48,7 @@ const register = (req, res) => {
         stage: 'dev',
         base: base || (iepMap.prod && iepMap.prod.base),
       });
-    return res.send(log(iepMap[devTicket]));
+    return res.send(log('register', iepMap[devTicket]));
   }
   res.status(404).send(`unrecognized ticket ${ticket}`);
 };
@@ -69,7 +67,7 @@ const update = (req, res) => {
         iepMap[devTicket]
       )
     );
-    return res.send(log(iepMap[devTicket]));
+    return res.send(log('update', iepMap[devTicket]));
   }
   res.status(404).send(`unrecognized ticket ${ticket}`);
 };
@@ -102,7 +100,7 @@ const promote = (req, res) => {
     });
     delete iepMap[qaTicket];
     goLive(iepMap.prod.map);
-    return res.send(iepMap.prod);
+    return res.send(log('promote', iepMap.prod));
   }
   res.status(404).send(`unrecognized ticket ${ticket}`);
 };
