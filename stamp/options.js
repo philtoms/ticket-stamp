@@ -5,9 +5,9 @@ export const optionDefinitions = [
   { name: 'verbose', alias: 'v', type: Boolean },
   {
     name: 'ticket',
-    description: 'An open Jira ticket number (uppercase)',
+    description: 'An open Jira ticket number',
     alias: 't',
-    type: (ticket) => ticket.replace(/[\-_]/, '').toLowerCase(),
+    type: String,
     defaultOption: true,
   },
   {
@@ -21,6 +21,12 @@ export const optionDefinitions = [
     description: 'Update module entry | entries (default: auto / watch)',
     alias: 'u',
     multiple: true,
+    type: String,
+  },
+  {
+    name: 'folder',
+    description: 'Watch / upload folder (default: ./src)',
+    alias: 'f',
     type: String,
   },
   {

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import ImportMap, { goLive } from './import-map';
-import canPromote from './git';
+import git from '../utils/git';
+import log from '../utils/log';
 
 const iepMap = {};
 
@@ -13,15 +14,17 @@ const stamp = (data) => ({
 const list = (req, res) => {
   const { stage } = req.query;
   res.send(
-    Object.entries(iepMap)
-      .filter(([ticket]) => !stage || ticket.startsWith(stage))
-      .reduce(
-        (acc, [ticket, data]) => ({
-          ...acc,
-          [ticket.split('/').pop()]: data,
-        }),
-        {}
-      )
+    log(
+      Object.entries(iepMap)
+        .filter(([ticket]) => !stage || ticket.startsWith(stage))
+        .reduce(
+          (acc, [ticket, data]) => ({
+            ...acc,
+            [ticket.split('/').pop()]: data,
+          }),
+          {}
+        )
+    )
   );
 };
 
@@ -34,7 +37,7 @@ const generateMap = ({ md5, name, data, map }) => {
 
 const fakeTickets = 'AUSA-200,AUSA-201';
 const register = (req, res) => {
-  const { ticket } = req.body;
+  const { ticket, base } = req.body;
   if (fakeTickets.includes(ticket)) {
     // don't overwrite existing ticket work
     // - use update to do that
@@ -45,9 +48,9 @@ const register = (req, res) => {
         ticket,
         map: ImportMap(ticket),
         stage: 'dev',
-        base: iepMap.prod && iepMap.prod.base,
+        base: base || (iepMap.prod && iepMap.prod.base),
       });
-    return res.send(iepMap[devTicket]);
+    return res.send(log(iepMap[devTicket]));
   }
   res.status(404).send(`unrecognized ticket ${ticket}`);
 };
@@ -66,7 +69,7 @@ const update = (req, res) => {
         iepMap[devTicket]
       )
     );
-    return res.send(iepMap[devTicket]);
+    return res.send(log(iepMap[devTicket]));
   }
   res.status(404).send(`unrecognized ticket ${ticket}`);
 };
@@ -79,8 +82,9 @@ const promote = (req, res) => {
   const { ticket } = req.params;
   const devTicket = `dev/${ticket}`;
   const qaTicket = `qa/${ticket}`;
-  if (!canPromote()) {
-    return res.status(401).send('Master must be ancestor of current branch');
+  const { canPromote, status } = git();
+  if (!canPromote) {
+    return res.status(401).send(status);
   }
 
   if (iepMap[devTicket] && !iepMap[qaTicket]) {
