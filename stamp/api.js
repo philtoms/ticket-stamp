@@ -12,10 +12,9 @@ export const register = (ticket, verbose) => {
   ticketId = ticket.replace(/([a-zA-Z]+)-?([0-9]+)/, '$1-$2').toUpperCase();
   const form = new FormData();
   const { base } = git();
-  console.log(base);
   form.append('ticket', ticketId);
   form.append('base', base);
-  return fetch(iepServer, 'POST', form, verbose);
+  return fetch('register', iepServer, 'POST', form, verbose);
 };
 
 export const update = (files, folder = './src', verbose) => {
@@ -30,7 +29,7 @@ export const update = (files, folder = './src', verbose) => {
     files.map((file) => {
       const form = new FormData();
       form.append(file, fs.createReadStream(file));
-      return fetch(`${iepServer}/${ticketId}`, 'PUT', form, verbose);
+      return fetch('update', `${iepServer}/${ticketId}`, 'PUT', form, verbose);
     })
   );
 };
@@ -38,14 +37,21 @@ export const update = (files, folder = './src', verbose) => {
 export const promote = (verbose) => {
   const { canPromote, status } = git();
   if (canPromote) {
-    return fetch(`${iepServer}/${ticketId}/promote`, 'PUT', null, verbose);
+    return fetch(
+      'promote',
+      `${iepServer}/${ticketId}/promote`,
+      'PUT',
+      null,
+      verbose
+    );
   }
-  log(401, 'Git status', status);
+  log('promote', 401, 'Git status', status);
 };
 
 export const list = (prod, qa, dev, verbose) => {
   const query = (prod && 'prod') || (qa && 'qa') || (dev && 'dev');
   return fetch(
+    'list',
     `${iepServer}/list${query ? `?stage=${query}` : ''}`,
     'GET',
     null,

@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import log from './log';
-export default (url, method, body, verbose) =>
+export default (action, url, method, body, verbose) =>
   fetch(url, {
     method,
     body,
@@ -10,5 +10,5 @@ export default (url, method, body, verbose) =>
       body: await (res.status === 200 ? res.json() : res.text()),
     }))
     .then(({ status, body }) => {
-      log(status, verbose ? JSON.stringify(body, null, 2) : '');
+      log(action, status, verbose ? JSON.stringify(body, null, 2) : '');
     });
