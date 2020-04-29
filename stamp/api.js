@@ -1,7 +1,9 @@
 import fs from 'fs';
-import fetch from 'node-fetch';
 import chokidar from 'chokidar';
 import FormData from 'form-data';
+import git from '../utils/git';
+import fetch from '../utils/fetch';
+import log from '../utils/log';
 
 const iepServer = 'http://localhost:8080/iep';
 let ticketId;
@@ -9,25 +11,18 @@ let ticketId;
 export const register = (ticket, verbose) => {
   ticketId = ticket.replace(/([a-zA-Z]+)-?([0-9]+)/, '$1-$2').toUpperCase();
   const form = new FormData();
+  const { base } = git();
+  console.log(base);
   form.append('ticket', ticketId);
-  return fetch(iepServer, {
-    method: 'POST',
-    body: form,
-  })
-    .then(async (res) => ({
-      status: res.status,
-      body: await (res.status === 200 ? res.json() : res.text()),
-    }))
-    .then(({ status, body }) => {
-      console.log(status, verbose ? JSON.stringify(body, null, 2) : '');
-    });
+  form.append('base', base);
+  return fetch(iepServer, 'POST', form, verbose);
 };
 
-export const update = (files, verbose) => {
+export const update = (files, folder = './src', verbose) => {
   if (files.length === 0) {
-    console.log('watching...');
-    chokidar.watch('./src').on('change', (path) => {
-      update([path], verbose);
+    log(`watching ${folder}:`);
+    chokidar.watch(folder).on('change', (path) => {
+      update([path], folder, verbose);
     });
     process.stdin.resume();
   }
@@ -35,44 +30,25 @@ export const update = (files, verbose) => {
     files.map((file) => {
       const form = new FormData();
       form.append(file, fs.createReadStream(file));
-      return fetch(`${iepServer}/${ticketId}`, {
-        method: 'PUT',
-        body: form,
-      })
-        .then(async (res) => ({
-          status: res.status,
-          body: await (res.status === 200 ? res.json() : res.text()),
-        }))
-        .then(({ status, body }) => {
-          console.log(status, verbose ? JSON.stringify(body, null, 2) : '');
-        });
+      return fetch(`${iepServer}/${ticketId}`, 'PUT', form, verbose);
     })
   );
 };
 
 export const promote = (verbose) => {
-  return fetch(`${iepServer}/${ticketId}/promote`, {
-    method: 'PUT',
-  })
-    .then(async (res) => ({
-      status: res.status,
-      body: await (res.status === 200 ? res.json() : res.text()),
-    }))
-    .then(({ status, body }) => {
-      console.log(status, verbose ? JSON.stringify(body, null, 2) : '');
-    });
+  const { canPromote, status } = git();
+  if (canPromote) {
+    return fetch(`${iepServer}/${ticketId}/promote`, 'PUT', null, verbose);
+  }
+  log(401, 'Git status', status);
 };
 
 export const list = (prod, qa, dev, verbose) => {
   const query = (prod && 'prod') || (qa && 'qa') || (dev && 'dev');
-  return fetch(`${iepServer}/list${query ? `?stage=${query}` : ''}`, {
-    method: 'GET',
-  })
-    .then(async (res) => ({
-      status: res.status,
-      body: await (res.status === 200 ? res.json() : res.text()),
-    }))
-    .then(({ status, body }) => {
-      console.log(status, verbose ? JSON.stringify(body, null, 2) : '');
-    });
+  return fetch(
+    `${iepServer}/list${query ? `?stage=${query}` : ''}`,
+    'GET',
+    null,
+    verbose
+  );
 };

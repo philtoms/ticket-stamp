@@ -7,7 +7,7 @@ debugger;
     await register(options.ticket, options.verbose);
   }
   if (options.update) {
-    await update(options.update, options.verbose);
+    await update(options.update, options.folder, options.verbose);
   }
   if (options.promote) {
     await promote(options.verbose);
