@@ -15,10 +15,14 @@ const git = () => {
       execa.sync('git', ['fetch']);
       base = execa.sync('git', ['rev-parse', b]).stdout;
       status = execa.sync('git', ['status', '--porcelain']).stdout;
-      canPromote =
-        !status &&
-        execa.sync('git', ['merge-base', '--is-ancestor', 'master', b])
-          .exitCode === 0;
+      try {
+        canPromote =
+          !status &&
+          execa.sync('git', ['merge-base', '--is-ancestor', 'master', b])
+            .exitCode === 0;
+      } catch (e) {
+        canPromote = false;
+      }
     }
     return {
       base,
