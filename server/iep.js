@@ -97,7 +97,7 @@ const promote = (req, res) => {
       base,
       stage: 'qa',
     });
-    return res.send(iepMap[qaTicket]);
+    return res.send(log(iepMap[qaTicket]));
   }
 
   if (iepMap[qaTicket]) {
