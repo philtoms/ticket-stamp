@@ -1,4 +1,6 @@
 import fs from 'fs';
+import overrideRequire from 'override-require';
+
 import ImportMap, { goLive } from '../utils/import-map';
 import git from '../utils/git';
 import log from '../utils/log';
@@ -26,35 +28,38 @@ const list = (req, res) => {
   );
 };
 
-const generateMap = ({ md5, name, data, map }) => {
+const generateMap = ({ md5, name, data }, map) => {
   const [fileName, fileType] = name.split('.');
   const iepName = `${fileName}.${md5}.${fileType}`;
   fs.writeFileSync(`./modules/${iepName}`, data);
+  // Will probably split into SSR and CSR imports
   return ImportMap(fileName, iepName, map);
 };
 
 // tickets could be registered directly with IEP. In this workflow, ticket registration
 // would be a distinct step before developer registration and would typically be performed
-// the ticket / workflow manager.
+// by the ticket / workflow manager.
 // An alternative is to integrate the IEP service with the ticket service.
-const fakeTickets = 'AUSA-200,AUSA-201';
+// This alpha just accepts a unique ticket number
 const register = (req, res) => {
   const { ticket, base } = req.body;
-  if (fakeTickets.includes(ticket)) {
-    // don't overwrite existing ticket work
-    // - use update to do that
-    const devTicket = `dev/${ticket}`;
-    iepMap[devTicket] =
-      iepMap[devTicket] ||
-      stamp({
-        ticket,
-        stage: 'dev',
-        base,
-        map: ImportMap(ticket),
-      });
-    return res.send(log('register', iepMap[devTicket]));
-  }
-  res.status(404).send(`unrecognized ticket ${ticket}`);
+  // don't overwrite existing ticket work
+  // - use update to do that
+  const devTicket = `dev/${ticket}`;
+  const newTicket = !iepMap[devTicket];
+  iepMap[devTicket] =
+    iepMap[devTicket] ||
+    stamp({
+      ticket,
+      stage: 'dev',
+      status: 'open',
+      base,
+      map: ImportMap(ticket),
+    });
+
+  return res
+    .status(newTicket ? 201 : 200)
+    .send(log('register', iepMap[devTicket]));
 };
 
 const update = (req, res) => {
@@ -62,14 +67,14 @@ const update = (req, res) => {
   const devTicket = `dev/${ticket}`;
   if (iepMap[devTicket]) {
     iepMap[devTicket] = stamp(
-      Object.values(req.files).reduce(
-        (acc, file) => ({
+      Object.values(req.files).reduce((acc, file) => {
+        const name = file.name.split('.').shift();
+        return {
           ...acc,
-          map: generateMap(file),
-          files: [...(acc.files || []), file.name.split('.').shift()],
-        }),
-        iepMap[devTicket]
-      )
+          map: generateMap(file, iepMap[devTicket].map),
+          files: [...(acc.files || []).filter((file) => file !== name), name],
+        };
+      }, iepMap[devTicket])
     );
     return res.send(log('update', iepMap[devTicket]));
   }
@@ -86,12 +91,12 @@ const promote = (req, res) => {
   const { ticket } = req.params;
   const devTicket = `dev/${ticket}`;
   const qaTicket = `qa/${ticket}`;
-  const { canPromote, status, base } = git();
-  if (!canPromote) {
-    return res.status(401).send(status);
-  }
+  const { isAncestor, status, base } = git();
 
   if (iepMap[devTicket] && !iepMap[qaTicket]) {
+    if (isAncestor && !status) {
+      return res.status(401).send(status);
+    }
     iepMap[qaTicket] = stamp({
       ...iepMap[devTicket],
       base,
@@ -101,13 +106,16 @@ const promote = (req, res) => {
   }
 
   if (iepMap[qaTicket]) {
+    if (isAncestor) {
+      return res.status(403).send(status);
+    }
     iepMap.prod = stamp({
       ...iepMap[qaTicket],
       base,
       stage: 'prod',
     });
-    delete iepMap[qaTicket];
-    delete iepMap[devTicket];
+    iepMap[qaTicket].status = 'closed';
+    iepMap[devTicket].status = 'closed';
     goLive(iepMap.prod.map);
     return res.send(log('promote', iepMap.prod));
   }
@@ -121,6 +129,28 @@ const validTicket = (qa, dev) => {
   return iepMap[`dev/${dev}`] || iepMap.prod;
 };
 
+// Currently only CJS-require is supported for SSR dependencies.
+// On the plus side this makes it easy to override the require
+// on a ticket by ticket basis.
+const isOverride = (ticket) => (request) => {
+  return !!ticket.map.imports[request.split('/').pop()];
+};
+const resolveRequest = (ticket) => (request) => {
+  return require(`..${ticket.map.imports[request.split('/').pop()]}`);
+};
+
+// this render function may become unnecessary when true
+// SSR import mapping is supported.
+const render = (ticket, body, client) => {
+  const restoreOriginalModuleLoader = overrideRequire(
+    isOverride(ticket),
+    resolveRequest(ticket)
+  );
+  const buffer = client(body);
+  restoreOriginalModuleLoader();
+  return buffer;
+};
+
 export default {
   validTicket,
   // refactor these into m/w
@@ -128,4 +158,5 @@ export default {
   register,
   update,
   promote,
+  render,
 };

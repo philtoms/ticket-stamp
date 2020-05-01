@@ -7,7 +7,7 @@ const git = () => {
   try {
     let b = currentBranch(cwd);
     let status = '';
-    let canPromote = false;
+    let isAncestor = false;
     let base = '';
 
     b = b && b.slice(0, 14) !== '(HEAD detached' ? b : 'master';
@@ -16,26 +16,24 @@ const git = () => {
       base = execa.sync('git', ['rev-parse', b]).stdout;
       status = execa.sync('git', ['status', '--porcelain']).stdout;
       try {
-        canPromote =
-          !status &&
+        isAncestor =
           execa.sync('git', ['merge-base', '--is-ancestor', 'master', b])
             .exitCode === 0;
       } catch (e) {
-        canPromote = false;
+        isAncestor = false;
       }
     }
     return {
       base,
       status:
-        !status && !canPromote
+        !status && !isAncestor
           ? 'Master must be ancestor of current branch'
           : status,
-      canPromote,
+      isAncestor,
     };
   } catch (e) {
     return {
       status: e,
-      canPromote: false,
     };
   }
 };

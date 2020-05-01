@@ -27,6 +27,7 @@ export const update = (files, folder = './src', verbose) => {
   }
   return Promise.all(
     files.map((file) => {
+      console.log(file);
       const form = new FormData();
       form.append(file, fs.createReadStream(file));
       return fetch('update', `${iepServer}/${ticketId}`, 'PUT', form, verbose);
