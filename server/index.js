@@ -5,7 +5,6 @@ import compression from 'compression';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import iep from './iep';
 import inject from './inject';
-import client from '../src/app';
 
 const app = express();
 
@@ -54,7 +53,7 @@ app.use(
             body += data;
             if (data.includes('</html>')) {
               try {
-                const buffer = inject(iep.render(ticket, body, client));
+                const buffer = inject(iep.render(ticket, body, 'app'));
                 return _write.call(res, buffer);
               } catch (err) {
                 console.error(err);

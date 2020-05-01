@@ -28,14 +28,6 @@ const list = (req, res) => {
   );
 };
 
-const generateMap = ({ md5, name, data }, map) => {
-  const [fileName, fileType] = name.split('.');
-  const iepName = `${fileName}.${md5}.${fileType}`;
-  fs.writeFileSync(`./modules/${iepName}`, data);
-  // Will probably split into SSR and CSR imports
-  return ImportMap(fileName, iepName, map);
-};
-
 // tickets could be registered directly with IEP. In this workflow, ticket registration
 // would be a distinct step before developer registration and would typically be performed
 // by the ticket / workflow manager.
@@ -64,18 +56,22 @@ const register = (req, res) => {
 
 const update = (req, res) => {
   const { ticket } = req.params;
+  const { name, type } = req.body;
+  const { md5, data } = req.files.file;
   const devTicket = `dev/${ticket}`;
-  if (iepMap[devTicket]) {
-    iepMap[devTicket] = stamp(
-      Object.values(req.files).reduce((acc, file) => {
-        const name = file.name.split('.').shift();
-        return {
-          ...acc,
-          map: generateMap(file, iepMap[devTicket].map),
-          files: [...(acc.files || []).filter((file) => file !== name), name],
-        };
-      }, iepMap[devTicket])
-    );
+  const iep = iepMap[devTicket];
+  if (iep) {
+    const iepName = `${name}.${md5}.${type}`;
+    fs.writeFileSync(`./modules/${iepName}`, data);
+    // Will probably split into SSR and CSR imports
+    const alias = type === 'js' ? name : `${name}.${type}`;
+
+    iepMap[devTicket] = stamp({
+      ...iep,
+      map: ImportMap(alias, iepName, iep.map),
+      files: [...(iep.files || []).filter((file) => file !== alias), alias],
+    });
+
     return res.send(log('update', iepMap[devTicket]));
   }
   res.status(404).send(`unrecognized ticket ${ticket}`);
@@ -133,20 +129,25 @@ const validTicket = (qa, dev) => {
 // On the plus side this makes it easy to override the require
 // on a ticket by ticket basis.
 const isOverride = (ticket) => (request) => {
-  return !!ticket.map.imports[request.split('/').pop()];
+  return (
+    !request.startsWith('/modules') &&
+    !!ticket.map.imports[request.split('/').pop()]
+  );
 };
 const resolveRequest = (ticket) => (request) => {
-  return require(`..${ticket.map.imports[request.split('/').pop()]}`);
+  const module = require(`..${ticket.map.imports[request.split('/').pop()]}`);
+  return module.default || module;
 };
 
 // this render function may become unnecessary when true
 // SSR import mapping is supported.
-const render = (ticket, body, client) => {
+const render = (ticket, body, appName) => {
   const restoreOriginalModuleLoader = overrideRequire(
     isOverride(ticket),
     resolveRequest(ticket)
   );
-  const buffer = client(body);
+  const app = require(appName);
+  const buffer = (app.default || app)(body);
   restoreOriginalModuleLoader();
   return buffer;
 };

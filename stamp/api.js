@@ -27,10 +27,20 @@ export const update = (files, folder = './src', verbose) => {
   }
   return Promise.all(
     files.map((file) => {
-      console.log(file);
+      const [type, ...path] = file.split('.').reverse();
+      const part = path.join().split('/').reverse();
+      const name = part[0] === 'index' ? part[1] : part[0];
       const form = new FormData();
-      form.append(file, fs.createReadStream(file));
-      return fetch('update', `${iepServer}/${ticketId}`, 'PUT', form, verbose);
+      form.append('name', name);
+      form.append('type', type);
+      form.append('file', fs.createReadStream(file));
+      return fetch(
+        `update ${file}`,
+        `${iepServer}/${ticketId}`,
+        'PUT',
+        form,
+        verbose
+      );
     })
   );
 };
