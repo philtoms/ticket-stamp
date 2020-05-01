@@ -1,6 +1,6 @@
 # Ticket Stamp
 
-`Ticket Stamp` is a very fast and lightweight development system that supports ticket driven staged workflows. Modules under active ticket development are automatically integrated into the current production application to create a unique and isolated application entry point. Everything is live - except for the modules in the ticket.
+`Ticket Stamp` is a very fast and lightweight development system that supports ticket driven staged workflows. Modules under active ticket development are automatically integrated into the current production application to create a unique and isolated application entry point (IEP). Everything is live - except for the modules in the ticket.
 
 ## Features
 
@@ -15,7 +15,7 @@
 
 The `Ticket Stamp` system consists of a cloud service that orchestrates the creation and delivery of [Import Maps](https://wicg.github.io/import-maps/), and a CLI tool that is used by the developer to create and operate a ticket workflow.
 
-- Each import map is uniquely bound to a ticket and stored as an IEP (immutable entry point) in the IEP cloud service.
+- Each import map is uniquely bound to a ticket and stored as an IEP (isolated entry point) in the IEP cloud service.
 - The IEP is upgraded through module development
 - A page url with a `?stage=ticket` query will load the IEP import map into the page response.
 - The browser then resolves all of its imports through the import map.
