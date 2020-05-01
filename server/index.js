@@ -3,8 +3,9 @@ import express from 'express';
 import fileupload from 'express-fileupload';
 import compression from 'compression';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import inject from './inject';
 import iep from './iep';
+import inject from './inject';
+import client from '../src/app';
 
 const app = express();
 
@@ -44,18 +45,20 @@ app.use(
         { query: { qa, dev }, headers: { referer } },
         res
       ) {
-        const map = (iep.validTicket(qa, dev) || {}).map;
-        if (!referer && map) {
+        const ticket = iep.validTicket(qa, dev);
+        if (!referer && ticket) {
           const _write = res.write;
-          let id;
-          let body;
+          let body = '';
           res.write = function (data) {
             data = data.toString('utf-8');
-            try {
-              [body, id] = inject(data, id, map);
-              _write.call(res, body);
-            } catch (err) {
-              console.error(err);
+            body += data;
+            if (data.includes('</html>')) {
+              try {
+                const buffer = inject(iep.render(ticket, body, client));
+                return _write.call(res, buffer);
+              } catch (err) {
+                console.error(err);
+              }
             }
           };
         }

@@ -27,7 +27,7 @@ export const handleScroll = (id, topSpacing = 0) => () => {
 // The added script. This would be applied to registered selectors in production source
 // - where registered implies any of OO-CSS, css-modules, etc...
 Array.from(document.querySelectorAll('[href^="#scroll-to"]')).forEach((el) => {
-  console.log('scrolling......');
+  console.log('scrolling...... for AUSA-200');
   el.addEventListener('click', handleScroll(el.href.split('#').pop()));
 });
 
