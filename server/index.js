@@ -53,7 +53,10 @@ app.use(
             body += data;
             if (data.includes('</html>')) {
               try {
-                const buffer = inject(iep.render(ticket, body, 'app'));
+                const buffer = inject(
+                  iep.render(ticket, body, 'app'),
+                  ticket.map
+                );
                 return _write.call(res, buffer);
               } catch (err) {
                 console.error(err);
