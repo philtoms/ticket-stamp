@@ -1,28 +1,32 @@
 # Ticket Stamp
 
-`Ticket Stamp` is a very fast and lightweight development system that supports ticket driven staged workflows. Modules under active ticket development are automatically integrated into the current production application to create a unique and isolated application entry point (IEP). Everything is live - except for the modules in the ticket.
+`Ticket Stamp` is a very fast and lightweight development system that supports ticket driven staged workflows. Modules under active ticket development are automatically integrated into the current production application to create a unique and isolated application entry point (IEP). The application is live - except for the modules in the ticket.
 
 ## Features
 
-- Ticket driven: development is completely isolated.
+- Ticket driven: All modules under ticket development are completely isolated from all other ticket workflows as well as other stages in the current workflow.
 - Staged promotion: from `dev` into `qa`, and on to `prod` at the click of a button.
-- Optimistic deployment: ticket stamped modules are immediately available for promotion
+- Optimistic deployment: ticket stamped modules are immediately available for promotion.
 - Backed by git: synchronizes with git history for safe alternate scenarios - even in `prod`.
-- Optional Jira integration for fine-grained ticket control
-- Optional Slack integration to keep everyone notified
+  - Promoted tickets can be reverted at any time after promotion.
+  - Closed tickets can be re-opened by re-initiating the workflow.
+  - Each of these operational patterns is near instantaneous.
+- Plugin architecture
+  - policy driven promotion: git checks, sanity tests, sign offs, etc.
+  - Optional Jira integration for fine-grained ticket control.
+  - Optional Slack integration to keep everyone notified.
 
 ## How it works
 
 The `Ticket Stamp` system consists of a cloud service that orchestrates the creation and delivery of [Import Maps](https://wicg.github.io/import-maps/), and a CLI tool that is used by the developer to create and operate a ticket workflow.
 
-- Each import map is uniquely bound to a ticket and stored as an IEP (isolated entry point) in the IEP cloud service.
-- The IEP is upgraded through module development
-- A page url with a `?stage=ticket` query will load the IEP import map into the page response.
-- The browser then resolves all of its imports through the import map.
+- Each import map is uniquely bound to a ticket and stored in an IEP (isolated entry point) in the IEP cloud service.
+- The IEP is progressively upgraded through module development
+- A page url with a stage:ticket query (`?dev=TKT-001`) will load the IEP import map into the page response.
+- The browser then resolves all of its imports through the import map. Typically the browser will have cached all but the
+  ticketed modules.
 
-The workflow is staged, starting at `dev` where development and testing will be undertaken, before being promoted to `qa`. The application will then be QA tested before being further promoted to `prod`. The ticket is then closed and removed from the workflow system.
-
-All modules under ticket development are isolated from all other ticket workflows as well as any higher stages in the current workflow.
+The workflow is staged, starting at `dev` where development and testing will be undertaken, before being promoted to `qa`. The application will then be QA tested before being further promoted to `prod`. The ticket is then closed but not removed from the workflow system.
 
 `Ticket Stamp` is designed to work with browsers that natively support [esm modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import).
 
@@ -51,8 +55,8 @@ at the command line run `stamp` (or `node stamp.js`)
   -d, --dev               Dev ticket specifier
   -p, --prod              Prod specifier
 
-  --promote               Promote a ticket
-  --revert                Revert a ticket (unstage)
+  --promote               Promote a ticket to next stage
+  --revert                Revert a ticket to previous stage
   --close                 Close a ticket
 ```
 
@@ -84,7 +88,7 @@ When both of these checks are verified, the IEP service promotes the ticket to `
 
 This action performs the same checks as the previous step before promoting the ticket to prod. The released application will no longer require a ticket in the URL.
 
-The ticket resources are closed but not removed from the workflow system. Tickets can be re-opened and they can be reverted.
+The ticket resources are closed but not removed from the workflow system. The ticket stage can be reverted almost instantaneously.
 
 ## Roadmap
 
