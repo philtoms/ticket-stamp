@@ -13,7 +13,7 @@ const stamp = (data) => ({
   timestamp: Date().toString(),
 });
 
-export default (modulePath) => {
+export default (modulePath, appPath) => {
   const list = (req, res) => {
     const { stage } = req.query;
     res.send(
@@ -131,7 +131,7 @@ export default (modulePath) => {
   // on a ticket by ticket basis.
   const isOverride = (ticket) => (request) => {
     return (
-      !request.startsWith('/modules') &&
+      !request.startsWith('/iep') &&
       !!ticket.map.imports[request.split('/').pop()]
     );
   };
@@ -144,12 +144,12 @@ export default (modulePath) => {
 
   // this render function may become unnecessary when true
   // SSR import mapping is supported.
-  const render = (ticket, body, appName) => {
+  const render = (ticket, body) => {
     const restoreOriginalModuleLoader = overrideRequire(
       isOverride(ticket),
       resolveRequest(ticket)
     );
-    const app = require(appName);
+    const app = require(appPath);
     const buffer = (app.default || app)(body);
     restoreOriginalModuleLoader();
     return buffer;

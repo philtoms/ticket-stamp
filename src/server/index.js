@@ -8,9 +8,14 @@ import inject from './inject';
 
 const app = express();
 
-const modulePath = path.resolve(__dirname, '../../modules');
+const iepPath = path.resolve(__dirname, '../../iep');
+const srcPath = path.resolve(__dirname, '../../src');
+const appPath = path.resolve(__dirname, '../app/index.js');
+const modPath = path.resolve(__dirname, '../../node_modules');
+
 const { list, register, promote, update, validTicket, render } = iep(
-  modulePath
+  iepPath,
+  appPath
 );
 
 app.use(compression());
@@ -22,12 +27,9 @@ app.post('/iep', register);
 app.put('/iep/:ticket/promote', promote);
 app.put('/iep/:ticket', update);
 
-app.use(
-  '/node_modules',
-  express.static(path.resolve(__dirname, '../../node_modules'))
-);
-app.use('/src', express.static(path.resolve(__dirname, '../../src')));
-app.use('/modules', express.static(modulePath));
+app.use('/node_modules', express.static(modPath));
+app.use('/src', express.static(srcPath));
+app.use('/iep', express.static(iepPath));
 app.use(
   '/',
   createProxyMiddleware(
@@ -58,7 +60,7 @@ app.use(
             body += data;
             if (data.includes('</html>')) {
               try {
-                const buffer = inject(render(ticket, body, 'app'), ticket.map);
+                const buffer = inject(render(ticket, body), ticket.map);
                 return _write.call(res, buffer);
               } catch (err) {
                 console.error(err);

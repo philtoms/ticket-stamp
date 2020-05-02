@@ -1,8 +1,5 @@
 let defaultMap = {
-  imports: {
-    'vh-check': '/src/components/vh-check/index.js',
-    'scroll-next': '/src/components/scroll-next/index.js',
-  },
+  imports: {},
 };
 
 export default (name, hashName, map = defaultMap) => {
@@ -10,7 +7,7 @@ export default (name, hashName, map = defaultMap) => {
     ...map,
     imports: {
       ...map.imports,
-      ...(hashName ? { [name]: `/modules/${hashName}` } : {}),
+      ...(hashName ? { [name]: `/iep/${hashName}` } : {}),
     },
   };
   return map;
