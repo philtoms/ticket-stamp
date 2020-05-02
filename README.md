@@ -1,6 +1,6 @@
 # Ticket Stamp
 
-`Ticket Stamp` is a very fast and lightweight development system that supports ticket driven staged workflows. Modules under active ticket development are automatically integrated into the current production application to create a unique and isolated application entry point (IEP). The application is live - except for the modules in the ticket.
+`ticket-stamp` is a very fast and lightweight development system that supports ticket driven staged workflows. Modules under active ticket development are automatically integrated into the current production application to create a unique and isolated application entry point (IEP). The application is live - except for the modules in the ticket.
 
 ## Features
 
@@ -12,13 +12,13 @@
   - Closed tickets can be re-opened by re-initiating the workflow.
   - Each of these operational patterns is near instantaneous.
 - Plugin architecture
-  - policy driven promotion: git checks, sanity tests, sign offs, etc.
+  - Policy driven promotion: git checks, sanity tests, sign offs, etc.
   - Optional Jira integration for fine-grained ticket control.
   - Optional Slack integration to keep everyone notified.
 
 ## How it works
 
-The `Ticket Stamp` system consists of a cloud service that orchestrates the creation and delivery of [Import Maps](https://wicg.github.io/import-maps/), and a CLI tool that is used by the developer to create and operate a ticket workflow.
+The `ticket-stamp` system consists of a cloud service that orchestrates the creation and delivery of [Import Maps](https://wicg.github.io/import-maps/), and a CLI tool that is used by the developer to create and operate a ticket workflow.
 
 - Each import map is uniquely bound to a ticket and stored in an IEP (isolated entry point) in the IEP cloud service.
 - The IEP is progressively upgraded through module development
@@ -26,9 +26,7 @@ The `Ticket Stamp` system consists of a cloud service that orchestrates the crea
 - The browser then resolves all of its imports through the import map. Typically the browser will have cached all but the
   ticketed modules.
 
-The workflow is staged, starting at `dev` where development and testing will be undertaken, before being promoted to `qa`. The application will then be QA tested before being further promoted to `prod`. The ticket is then closed but not removed from the workflow system.
-
-`Ticket Stamp` is designed to work with browsers that natively support [esm modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import).
+`ticket-stamp` is designed to work with browsers that natively support [esm modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import).
 
 ## Install / run
 
@@ -92,11 +90,11 @@ The ticket resources are closed but not removed from the workflow system. The ti
 
 ## Roadmap
 
-`Ticket Stamp` is in early alpha. There are many parts missing from the bigger picture.
+`ticket-stamp` is in early alpha. There are many parts missing from the bigger picture.
 
-- Upgrade --watch for add, change, delete
+- Upgrade `--watch` for add, change, delete
 - Implement IEP control panel - mainly for QA
-- Remove _require only_ restriction on server side imports
+- Remove _CJS require_ only restriction on server side imports
 - Plugin architecture - basically rewrite the whole IEP M/w to work with plugins
 - Policy plugin - move all of the promote decisions out of IEP
 - Authentication plugin - Integrate Github, Atlassian, etc single sign on
