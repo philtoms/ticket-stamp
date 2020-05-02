@@ -1,15 +1,16 @@
 import pipe from '../utils/pipe';
-import app from '../src/app';
+import app from '../app';
 
 // optional SSR perf improvement.
 // Not really necessary with defer refined script loading - undeferred script would
 // kick in immediately. For now audiusa.com forces all scripts to wait until DOM complete
 // - hence the current jank. This fixes that!
-import vhCheck from './vh-check-static';
+import vhCheck from '../components/vh-check/static';
+
 // again, not necessary when we re-visit the component source design but this highlights
 // the timeless power of scripting over applications.
 // NB: this is the only code-fix required for auto-playing MUI videos and its 100% SSR
-const autoPlay = (body) => body.replace('playsinline', 'playsinline autoplay');
+import autoPlay from '../components/video/autoplay';
 
 export default (buffer, map) => {
   // The injectors:
@@ -33,7 +34,7 @@ export default (buffer, map) => {
     <script type="importmap-shim">
       ${JSON.stringify(map, null, 2)}
     </script>
-    <script type="module-shim" src="/src/script.js" defer></script></body>`
+    <script type="module-shim" src="/src/app/script.js" defer></script></body>`
     );
   };
 

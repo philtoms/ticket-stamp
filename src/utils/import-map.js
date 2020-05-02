@@ -1,7 +1,7 @@
 let defaultMap = {
   imports: {
-    'vh-check': '/src/vh-check.js',
-    'scroll-next': '/src/scroll-next.js',
+    'vh-check': '/src/components/vh-check/index.js',
+    'scroll-next': '/src/components/scroll-next/index.js',
   },
 };
 

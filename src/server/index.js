@@ -3,26 +3,31 @@ import express from 'express';
 import fileupload from 'express-fileupload';
 import compression from 'compression';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import iep from './iep';
+import iep from '../iep';
 import inject from './inject';
 
 const app = express();
+
+const modulePath = path.resolve(__dirname, '../../modules');
+const { list, register, promote, update, validTicket, render } = iep(
+  modulePath
+);
 
 app.use(compression());
 app.use(fileupload());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/iep/list', iep.list);
-app.post('/iep', iep.register);
-app.put('/iep/:ticket/promote', iep.promote);
-app.put('/iep/:ticket', iep.update);
+app.get('/iep/list', list);
+app.post('/iep', register);
+app.put('/iep/:ticket/promote', promote);
+app.put('/iep/:ticket', update);
 
 app.use(
   '/node_modules',
-  express.static(path.resolve(__dirname, '../node_modules'))
+  express.static(path.resolve(__dirname, '../../node_modules'))
 );
-app.use('/src', express.static(path.resolve(__dirname, '../src')));
-app.use('/modules', express.static(path.resolve(__dirname, '../modules')));
+app.use('/src', express.static(path.resolve(__dirname, '../../src')));
+app.use('/modules', express.static(modulePath));
 app.use(
   '/',
   createProxyMiddleware(
@@ -30,7 +35,7 @@ app.use(
       const block =
         referer &&
         (pathName === '/__webpack_hmr' ||
-          (iep.validTicket(qa, dev) && pathName.endsWith('.js')));
+          (validTicket(qa, dev) && pathName.endsWith('.js')));
       return !block;
     },
     {
@@ -44,7 +49,7 @@ app.use(
         { query: { qa, dev }, headers: { referer } },
         res
       ) {
-        const ticket = iep.validTicket(qa, dev);
+        const ticket = validTicket(qa, dev);
         if (!referer && ticket) {
           const _write = res.write;
           let body = '';
@@ -53,10 +58,7 @@ app.use(
             body += data;
             if (data.includes('</html>')) {
               try {
-                const buffer = inject(
-                  iep.render(ticket, body, 'app'),
-                  ticket.map
-                );
+                const buffer = inject(render(ticket, body, 'app'), ticket.map);
                 return _write.call(res, buffer);
               } catch (err) {
                 console.error(err);
