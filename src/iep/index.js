@@ -1,9 +1,11 @@
 import fs from 'fs';
 import overrideRequire from 'override-require';
+import { init, parse } from 'es-module-lexer/dist/lexer.cjs';
 
 import ImportMap, { goLive } from '../utils/import-map';
 import git from '../utils/git';
 import log from '../utils/log';
+import split from '../utils/split-path';
 
 const iepMap = {};
 
@@ -13,7 +15,7 @@ const stamp = (data) => ({
   timestamp: Date().toString(),
 });
 
-export default (modulePath, appPath) => {
+export default (modulePath, appPath, srcPath) => {
   const list = (req, res) => {
     const { stage } = req.query;
     res.send(
@@ -155,6 +157,26 @@ export default (modulePath, appPath) => {
     return buffer;
   };
 
+  const resolve = async (req, res) => {
+    const [_, stage, ticket] =
+      req.headers.referer.match(/\?(dev|qa|prod)\=([^=^?^#]+)/) || [];
+    let src = fs.readFileSync(`${srcPath}/${req.params[0]}`, 'utf8');
+    const map = (iepMap[`${stage}/${ticket}`] || { map: {} }).map.imports;
+    if (map) {
+      await init;
+      const [imports] = parse(src);
+      src = imports.reduce((acc, { s, e }) => {
+        const importS = acc.substring(s, e);
+        const [name] = split(importS);
+        if (map[name]) {
+          return acc.replace(importS, map[name]);
+        }
+        return acc;
+      }, src);
+    }
+    res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+    res.send(src);
+  };
   return {
     validTicket,
     // refactor these into m/w
@@ -163,5 +185,6 @@ export default (modulePath, appPath) => {
     update,
     promote,
     render,
+    resolve,
   };
 };

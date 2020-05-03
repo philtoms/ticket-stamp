@@ -30,11 +30,8 @@ export default (buffer, map) => {
   const injectScript = (buffer) => {
     return buffer.replace(/<script[^<]+<\/script>/g, '').replace(
       /<\/body>/,
-      `\n$<script defer src="/node_modules/es-module-shims/dist/es-module-shims.js"></script>
-    <script type="importmap-shim">
-      ${JSON.stringify(map, null, 2)}
-    </script>
-    <script type="module-shim" src="/src/app/script.js" defer></script></body>`
+      `\n
+    <script type="module" src="/src/app/script.js" defer></script></body>`
     );
   };
 

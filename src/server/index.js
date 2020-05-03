@@ -13,22 +13,23 @@ const srcPath = path.resolve(__dirname, '../../src');
 const appPath = path.resolve(__dirname, '../app/index.js');
 const modPath = path.resolve(__dirname, '../../node_modules');
 
-const { list, register, promote, update, validTicket, render } = iep(
+const { list, register, promote, update, validTicket, render, resolve } = iep(
   iepPath,
-  appPath
+  appPath,
+  srcPath
 );
 
 app.use(compression());
 app.use(fileupload());
 app.use(express.urlencoded({ extended: true }));
 
+app.get('/src/*', resolve);
 app.get('/iep/list', list);
 app.post('/iep', register);
 app.put('/iep/:ticket/promote', promote);
 app.put('/iep/:ticket', update);
 
 app.use('/node_modules', express.static(modPath));
-app.use('/src', express.static(srcPath));
 app.use('/iep', express.static(iepPath));
 app.use(
   '/',

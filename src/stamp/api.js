@@ -4,6 +4,7 @@ import FormData from 'form-data';
 import git from '../utils/git';
 import fetch from '../utils/fetch';
 import log from '../utils/log';
+import split from '../utils/split-path';
 
 const iepServer = 'http://localhost:8080/iep';
 let ticketId;
@@ -27,9 +28,7 @@ export const update = (files, folder = './src', verbose) => {
   }
   return Promise.all(
     files.map((file) => {
-      const [type, ...path] = file.split('.').reverse();
-      const part = path.join().split('/').reverse();
-      const name = part[0] === 'index' ? part[1] : part[0];
+      const [name, type] = split(file);
       const form = new FormData();
       form.append('name', name);
       form.append('type', type);
