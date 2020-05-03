@@ -18,7 +18,7 @@
 
 ## How it works
 
-The `ticket-stamp` system consists of a cloud service that orchestrates the creation and delivery of [Import Maps](https://wicg.github.io/import-maps/), and a CLI tool that is used by the developer to create and operate a ticket workflow.
+The `ticket-stamp` system consists of a cloud service that orchestrates the creation and delivery of ticket stamped imports, and a CLI tool that is used by the developer to create and operate a ticket workflow.
 
 - Each import map is uniquely bound to a ticket and stored in an IEP (isolated entry point) in the IEP cloud service.
 - The IEP is progressively upgraded through module development
