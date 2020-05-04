@@ -45,8 +45,8 @@ export const update = (files, folder = './src', verbose) => {
 };
 
 export const promote = (verbose) => {
-  const { canPromote, status } = git();
-  if (canPromote) {
+  const { isAncestor, status } = git();
+  if (isAncestor && !status) {
     return fetch(
       'promote',
       `${iepServer}/${ticketId}/promote`,
@@ -56,6 +56,26 @@ export const promote = (verbose) => {
     );
   }
   log('promote', 401, 'Git status', status);
+};
+
+export const revert = (verbose) => {
+  return fetch(
+    'revert',
+    `${iepServer}/${ticketId}/revert`,
+    'PUT',
+    null,
+    verbose
+  );
+};
+
+export const close = (verbose) => {
+  return fetch(
+    'revert',
+    `${iepServer}/${ticketId}/revert`,
+    'PUT',
+    null,
+    verbose
+  );
 };
 
 export const list = (prod, qa, dev, verbose) => {

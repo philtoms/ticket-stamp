@@ -7,7 +7,7 @@ import git from '../utils/git';
 import log from '../utils/log';
 import split from '../utils/split-path';
 
-const iepMap = {};
+const iepMap = { prod: [] };
 
 const stamp = (data) => ({
   ...data,
@@ -80,6 +80,65 @@ export default (modulePath, appPath, srcPath) => {
     res.status(404).send(`unrecognized ticket ${ticket}`);
   };
 
+  const revert = (req, res) => {
+    const { ticket } = req.params;
+    const devTicket = `dev/${ticket}`;
+    const qaTicket = `qa/${ticket}`;
+    const prodTicket = iepMap.prod.find((entry) => entry.ticket === ticket);
+
+    if (prodTicket) {
+      const r = iepMap.prod.shift();
+      const c = iepMap.prod[0] || { status: 'un-stamped' };
+      return res.send(
+        log('revert', {
+          [r.ticket]: {
+            ...r,
+            status: 'reverted',
+          },
+          prod: c,
+        })
+      );
+    }
+    if (iepMap[qaTicket]) {
+      const r = iepMap[qaTicket];
+      delete iepMap[qaTicket];
+      return res.send(
+        log('revert', {
+          ...r,
+          status: 'reverted',
+        })
+      );
+    }
+    if (iepMap[devTicket]) {
+      const r = iepMap[devTicket];
+      delete iepMap[devTicket];
+      return res.send(
+        log('revert', {
+          ...r,
+          status: 'reverted',
+        })
+      );
+    }
+    res.status(404).send(`unrecognized ticket ${ticket}`);
+  };
+
+  const close = (req, res) => {
+    const { ticket } = req.params;
+    const devTicket = `dev/${ticket}`;
+    const qaTicket = `qa/${ticket}`;
+
+    if (iepMap[devTicket]) {
+      iepMap[devTicket].status = 'closed';
+    }
+    if (iepMap[qaTicket]) {
+      iepMap[qaTicket].status = 'closed';
+    }
+    if (iepMap[devTicket] || iepMap[qaTicket]) {
+      return res.send(log('close', `${ticket} closed`));
+    }
+    res.status(404).send(`unrecognized ticket ${ticket}`);
+  };
+
   // promote a ticket through dev -> QA -> prod
   // considerations:
   // - a ticket can only be promoted if master is the ancestor of HEAD
@@ -93,30 +152,30 @@ export default (modulePath, appPath, srcPath) => {
     const { isAncestor, status, base } = git();
 
     if (iepMap[devTicket] && !iepMap[qaTicket]) {
-      if (isAncestor && !status) {
-        return res.status(401).send(status);
+      if (!isAncestor || status) {
+        return res.status(403).send(status);
       }
       iepMap[qaTicket] = stamp({
         ...iepMap[devTicket],
         base,
         stage: 'qa',
       });
-      return res.send(log(iepMap[qaTicket]));
+      return res.send(log('promote', iepMap[qaTicket]));
     }
 
     if (iepMap[qaTicket]) {
-      if (isAncestor) {
+      if (!isAncestor) {
         return res.status(403).send(status);
       }
-      iepMap.prod = stamp({
-        ...iepMap[qaTicket],
-        base,
-        stage: 'prod',
-      });
-      iepMap[qaTicket].status = 'closed';
-      iepMap[devTicket].status = 'closed';
-      goLive(iepMap.prod.map);
-      return res.send(log('promote', iepMap.prod));
+      iepMap.prod.unshift(
+        stamp({
+          ...iepMap[qaTicket],
+          base,
+          stage: 'prod',
+        })
+      );
+      goLive(iepMap.prod[0].map);
+      return res.send(log('promote', iepMap.prod[0]));
     }
     res.status(404).send(`unrecognized ticket ${ticket}`);
   };
@@ -124,8 +183,8 @@ export default (modulePath, appPath, srcPath) => {
   // export a ticketed map to the application. Use prod until the ticket
   // is ready
   const validTicket = (qa, dev) => {
-    if (qa) return iepMap[`qa/${qa}`] || iepMap.prod;
-    return iepMap[`dev/${dev}`] || iepMap.prod;
+    if (qa) return iepMap[`qa/${qa}`] || iepMap.prod[0];
+    return iepMap[`dev/${dev}`] || iepMap.prod[0];
   };
 
   // Currently only CJS-require is supported for SSR dependencies.
@@ -177,6 +236,7 @@ export default (modulePath, appPath, srcPath) => {
     res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
     res.send(src);
   };
+
   return {
     validTicket,
     // refactor these into m/w
@@ -184,7 +244,9 @@ export default (modulePath, appPath, srcPath) => {
     register,
     update,
     promote,
+    close,
     render,
     resolve,
+    revert,
   };
 };
