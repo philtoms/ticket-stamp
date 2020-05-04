@@ -1,6 +1,6 @@
 import options, { optionDefinitions } from './options';
 import usage from './usage';
-import { register, update, list, promote } from './api';
+import { register, update, list, promote, revert, close } from './api';
 debugger;
 (async () => {
   if (options.ticket) {
@@ -11,6 +11,12 @@ debugger;
   }
   if (options.promote) {
     await promote(options.verbose);
+  }
+  if (options.revert) {
+    await revert(options.verbose);
+  }
+  if (options.close) {
+    await close(options.verbose);
   }
   if (options.list) {
     await list(options.prod, options.qa, options.dev, options.verbose);

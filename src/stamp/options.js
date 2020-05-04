@@ -18,7 +18,7 @@ export const optionDefinitions = [
   },
   {
     name: 'update',
-    description: 'Update module entry | entries (default: auto / watch)',
+    description: 'Update ticket entry | entries (default: auto / watch)',
     alias: 'u',
     multiple: true,
     type: String,
@@ -50,6 +50,16 @@ export const optionDefinitions = [
   {
     name: 'promote',
     description: 'Promote a ticket entry',
+    type: Boolean,
+  },
+  {
+    name: 'revert',
+    description: 'Revert a ticket entry',
+    type: Boolean,
+  },
+  {
+    name: 'close',
+    description: 'Close a ticket entry',
     type: Boolean,
   },
 ];
