@@ -30,7 +30,7 @@ The `ticket-stamp` system consists of a cloud service that orchestrates the crea
 
 ## Install / run
 
-`yarn && TARGET=https://www.audiusa.com node ./index.js`
+`yarn && TARGET=https://www.mylivesite.com node ./index.js`
 
 ## Synopsis
 
