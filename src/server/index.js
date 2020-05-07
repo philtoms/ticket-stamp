@@ -64,6 +64,7 @@ app.use(
       ) {
         const ticket = qa || dev;
         const stage = (qa && 'qa') || (dev && 'dev');
+        console.log(validTicket(ticket, stage));
         const iep = validTicket(ticket, stage);
         if (!referer && iep) {
           const _write = res.write;
