@@ -38,12 +38,15 @@ export default (modulePath, appPath, srcPath) => {
   // This alpha just accepts a unique ticket number
   const register = (req, res) => {
     const { ticket, base } = req.body;
+    const prod = iepMap.prod.find((entry) => entry.ticket === ticket);
+    if (prod) {
+      return res.status(200).send(prod);
+    }
     // don't overwrite existing ticket work
     // - use update to do that
-    const devTicket = `dev/${ticket}`;
-    const newTicket = !iepMap[devTicket];
-    iepMap[devTicket] =
-      iepMap[devTicket] ||
+    const iep = prod || iepMap[ticket];
+    iepMap[ticket] =
+      iep ||
       stamp({
         ticket,
         stage: 'dev',
@@ -52,89 +55,83 @@ export default (modulePath, appPath, srcPath) => {
         map: ImportMap(ticket),
       });
 
-    return res
-      .status(newTicket ? 201 : 200)
-      .send(log('register', iepMap[devTicket]));
+    return res.status(iep ? 200 : 201).send(log('register', iepMap[ticket]));
   };
 
   const update = (req, res) => {
     const { ticket } = req.params;
     const { name, type } = req.body;
     const { md5, data } = req.files.file;
-    const devTicket = `dev/${ticket}`;
-    const iep = iepMap[devTicket];
+    const iep = iepMap[ticket];
     if (iep) {
+      if (iep.stage !== 'dev') {
+        return res
+          .status(401)
+          .send(`ticket ${ticket} is already at ${iepMap[ticket].stage} stage`);
+      }
       const iepName = `${name}.${md5}.${type}`;
       fs.writeFileSync(`${modulePath}/${iepName}`, data);
       // Will probably split into SSR and CSR imports
       const alias = type === 'js' ? name : `${name}.${type}`;
 
-      iepMap[devTicket] = stamp({
+      iepMap[ticket] = stamp({
         ...iep,
         map: ImportMap(alias, iepName, iep.map),
+        status: 'open',
         files: [...(iep.files || []).filter((file) => file !== alias), alias],
       });
 
-      return res.send(log('update', iepMap[devTicket]));
+      return res.send(log('update', iepMap[ticket]));
     }
     res.status(404).send(`unrecognized ticket ${ticket}`);
   };
 
   const revert = (req, res) => {
     const { ticket } = req.params;
-    const devTicket = `dev/${ticket}`;
-    const qaTicket = `qa/${ticket}`;
-    const prodTicket = iepMap.prod.find((entry) => entry.ticket === ticket);
-
+    const prodTicket = (iepMap.prod[0] || {}).ticket === ticket;
     if (prodTicket) {
-      const r = iepMap.prod.shift();
-      const c = iepMap.prod[0] || { status: 'un-stamped' };
+      iepMap[ticket] = stamp({
+        ...iepMap.prod.shift(),
+        stage: 'qa',
+        status: 'reverted',
+      });
+      const prod = iepMap.prod[0] || { status: 'un-stamped' };
       return res.send(
         log('revert', {
-          [r.ticket]: {
-            ...r,
-            status: 'reverted',
-          },
-          prod: c,
+          [ticket]: iepMap[ticket],
+          prod,
         })
       );
     }
-    if (iepMap[qaTicket]) {
-      const r = iepMap[qaTicket];
-      delete iepMap[qaTicket];
-      return res.send(
-        log('revert', {
-          ...r,
+    const iep = iepMap[ticket];
+    if (iep) {
+      if (iep.stage === 'qa') {
+        iepMap[ticket] = stamp({
+          ...iep,
+          stage: 'dev',
           status: 'reverted',
-        })
-      );
-    }
-    if (iepMap[devTicket]) {
-      const r = iepMap[devTicket];
-      delete iepMap[devTicket];
-      return res.send(
-        log('revert', {
-          ...r,
-          status: 'reverted',
-        })
-      );
+        });
+      }
+      if (iep.stage === 'dev') {
+        iepMap[ticket] = stamp({
+          ...iep,
+          status: 'closed',
+        });
+      }
+      return res.send(log('revert', iepMap[ticket]));
     }
     res.status(404).send(`unrecognized ticket ${ticket}`);
   };
 
   const close = (req, res) => {
     const { ticket } = req.params;
-    const devTicket = `dev/${ticket}`;
-    const qaTicket = `qa/${ticket}`;
-
-    if (iepMap[devTicket]) {
-      iepMap[devTicket].status = 'closed';
-    }
-    if (iepMap[qaTicket]) {
-      iepMap[qaTicket].status = 'closed';
-    }
-    if (iepMap[devTicket] || iepMap[qaTicket]) {
-      return res.send(log('close', `${ticket} closed`));
+    const iep = iepMap[ticket];
+    if (iep) {
+      iepMap[ticket] = stamp({
+        ...iep,
+        status: 'closed',
+      });
+      return res.send(log('close', iepMap[ticket]));
     }
     res.status(404).send(`unrecognized ticket ${ticket}`);
   };
@@ -147,44 +144,35 @@ export default (modulePath, appPath, srcPath) => {
   //   build has completed cleanly.
   const promote = (req, res) => {
     const { ticket } = req.params;
-    const devTicket = `dev/${ticket}`;
-    const qaTicket = `qa/${ticket}`;
     const { isAncestor, status, base } = git();
+    if (!isAncestor || status) {
+      return res.status(403).send(status);
+    }
 
-    if (iepMap[devTicket] && !iepMap[qaTicket]) {
-      if (!isAncestor || status) {
-        return res.status(403).send(status);
-      }
-      iepMap[qaTicket] = stamp({
-        ...iepMap[devTicket],
+    const iep = iepMap[ticket];
+    if (iep) {
+      const stage = iep.stage === 'dev' ? 'qa' : 'prod';
+      iepMap[ticket] = stamp({
+        ...iep,
         base,
-        stage: 'qa',
+        stage,
       });
-      return res.send(log('promote', iepMap[qaTicket]));
+      if (stage === 'prod') {
+        iepMap.prod.unshift(iepMap[ticket]);
+        delete iepMap[ticket];
+        goLive(iepMap.prod[0].map);
+      }
+      return res.send(log('promote', iepMap[ticket] || iepMap.prod[0]));
     }
 
-    if (iepMap[qaTicket]) {
-      if (!isAncestor) {
-        return res.status(403).send(status);
-      }
-      iepMap.prod.unshift(
-        stamp({
-          ...iepMap[qaTicket],
-          base,
-          stage: 'prod',
-        })
-      );
-      goLive(iepMap.prod[0].map);
-      return res.send(log('promote', iepMap.prod[0]));
-    }
     res.status(404).send(`unrecognized ticket ${ticket}`);
   };
 
   // export a ticketed map to the application. Use prod until the ticket
   // is ready
-  const validTicket = (qa, dev) => {
-    if (qa) return iepMap[`qa/${qa}`] || iepMap.prod[0];
-    return iepMap[`dev/${dev}`] || iepMap.prod[0];
+  const validTicket = (ticket, stage) => {
+    const iep = iepMap[ticket] || {};
+    return (iep.stage === stage && iep) || iepMap.prod[0];
   };
 
   // Currently only CJS-require is supported for SSR dependencies.

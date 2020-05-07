@@ -22,9 +22,8 @@ The `ticket-stamp` system consists of a cloud service that orchestrates the crea
 
 - Each import map is uniquely bound to a ticket and stored in an IEP (isolated entry point) in the IEP cloud service.
 - The IEP is progressively upgraded through module development
-- A page url with a stage:ticket query (`?dev=TKT-001`) will load the IEP import map into the page response.
-- The browser then resolves all of its imports through the import map. Typically the browser will have cached all but the
-  ticketed modules.
+- A page url with a stage:ticket query (`?dev=TKT-001`) will update the script response with the appropriate IEP entries.
+- Typically the browser will have cached all but the ticketed modules.
 
 `ticket-stamp` is designed to work with browsers that natively support [esm modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import).
 
@@ -94,7 +93,7 @@ The ticket resources are closed but not removed from the workflow system. The ti
 
 - Upgrade `--watch` for add, change, delete
 - Implement IEP control panel - mainly for QA
-- Remove _CJS require_ only restriction on server side imports
+- Remove _CJS require only_ restriction on server side imports
 - Plugin architecture - basically rewrite the whole IEP M/w to work with plugins
 - Policy plugin - move all of the promote decisions out of IEP
 - Authentication plugin - Integrate Github, Atlassian, etc single sign on

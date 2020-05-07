@@ -43,10 +43,12 @@ app.use(
   '/',
   createProxyMiddleware(
     (pathName, { query: { qa, dev }, headers: { referer } }) => {
+      const ticket = qa || dev;
+      const stage = (qa && 'qa') || (dev && 'dev');
       const block =
         referer &&
         (pathName === '/__webpack_hmr' ||
-          (validTicket(qa, dev) && pathName.endsWith('.js')));
+          (validTicket(ticket, stage) && pathName.endsWith('.js')));
       return !block;
     },
     {
@@ -60,8 +62,10 @@ app.use(
         { query: { qa, dev }, headers: { referer } },
         res
       ) {
-        const ticket = validTicket(qa, dev);
-        if (!referer && ticket) {
+        const ticket = qa || dev;
+        const stage = (qa && 'qa') || (dev && 'dev');
+        const iep = validTicket(ticket, stage);
+        if (!referer && iep) {
           const _write = res.write;
           let body = '';
           res.write = function (data) {
@@ -69,7 +73,7 @@ app.use(
             body += data;
             if (data.includes('</html>')) {
               try {
-                const buffer = inject(render(ticket, body), ticket.map);
+                const buffer = inject(render(iep, body), iep.map);
                 return _write.call(res, buffer);
               } catch (err) {
                 console.error(err);
