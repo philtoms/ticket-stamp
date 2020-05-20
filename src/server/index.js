@@ -29,7 +29,8 @@ app.use(compression());
 app.use(fileupload());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/src/*', resolve);
+app.use('/src/*', resolve);
+app.use('/static/*', resolve);
 app.get('/iep/list', list);
 app.post('/iep', register);
 app.put('/iep/:ticket/promote', promote);

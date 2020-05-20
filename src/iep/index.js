@@ -205,28 +205,35 @@ export default (modulePath, appPath, srcPath) => {
     return buffer;
   };
 
-  const resolve = async (req, res) => {
-    const [_, stage = 'prod', ticket] =
-      req.headers.referer.match(/\?(dev|qa|prod)\=([^=^?^#]+)/) || [];
-    let src = fs.readFileSync(`${srcPath}/${req.params[0]}`, 'utf8');
-    const iep = iepMap[ticket] || iepMap.prod[0] || { map: {} };
-    if (iep && iep.stage === stage) {
-      const map = iep.map.imports;
-      if (map) {
-        await init;
-        const [imports] = parse(src);
-        src = imports.reduce((acc, { s, e }) => {
-          const importS = acc.substring(s, e);
-          const [name] = split(importS);
-          if (map[name]) {
-            return acc.replace(importS, map[name]);
-          }
-          return acc;
-        }, src);
+  const resolve = (req, res, next) => {
+    const path = `${srcPath}/${req.params[0]}`;
+    fs.access(path, fs.F_OK, async (err) => {
+      if (err) {
+        console.log(path);
+        return next();
       }
-    }
-    res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
-    res.send(src);
+      const [_, stage = 'prod', ticket] =
+        req.headers.referer.match(/\?(dev|qa|prod)\=([^=^?^#]+)/) || [];
+      let src = fs.readFileSync(path, 'utf8');
+      const iep = iepMap[ticket] || iepMap.prod[0] || { map: {} };
+      if (iep && iep.stage === stage) {
+        const map = iep.map.imports;
+        if (map) {
+          await init;
+          const [imports] = parse(src);
+          src = imports.reduce((acc, { s, e }) => {
+            const importS = acc.substring(s, e);
+            const [name] = split(importS);
+            if (map[name]) {
+              return acc.replace(importS, map[name]);
+            }
+            return acc;
+          }, src);
+        }
+      }
+      res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+      res.send(src);
+    });
   };
 
   return {
