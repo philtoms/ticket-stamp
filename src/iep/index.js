@@ -180,15 +180,13 @@ export default (modulePath, appPath, srcPath) => {
   // on a ticket by ticket basis.
   const isOverride = (ticket) => (request) => {
     return (
-      ticket.map &&
+      ticket &&
       !request.startsWith('/iep') &&
-      !!ticket.map.imports[request.split('/').pop()]
+      !!ticket.imports[request.split('/').pop()]
     );
   };
   const resolveRequest = (ticket) => (request) => {
-    const module = require(`../..${
-      ticket.map.imports[request.split('/').pop()]
-    }`);
+    const module = require(`../..${ticket.imports[request.split('/').pop()]}`);
     return module.default || module;
   };
 
