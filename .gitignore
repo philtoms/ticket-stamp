@@ -1,6 +1,6 @@
 .DS_Store
 modules
-iep
+/iep
 node_modules
 npm-debug.log
 .vscode

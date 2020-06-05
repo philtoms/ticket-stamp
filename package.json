@@ -21,5 +21,13 @@
     "node-fetch": "^2.6.0",
     "override-require": "^1.1.1",
     "zlib": "^1.0.5"
+  },
+  "devDependencies": {
+    "ava": "^3.8.2"
+  },
+  "ava": {
+    "files": [
+      "src/**/*.test.js"
+    ]
   }
 }
