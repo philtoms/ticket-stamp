@@ -1,6 +1,6 @@
 import fs from 'fs';
 import overrideRequire from 'override-require';
-import { init, parse } from 'es-module-lexer/dist/lexer.cjs';
+import { init, parse } from 'es-module-lexer/dist/lexer';
 
 import ImportMap, { goLive } from '../utils/import-map';
 import git from '../utils/git';

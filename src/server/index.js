@@ -1,10 +1,14 @@
-import path from 'path';
+import { fileURLToPath } from 'url';
+import path, { dirname } from 'path';
 import express from 'express';
 import fileupload from 'express-fileupload';
 import compression from 'compression';
-import { createProxyMiddleware } from 'http-proxy-middleware';
+import hpm from 'http-proxy-middleware';
 import iep from '../iep';
 import inject from './inject';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 
@@ -42,7 +46,7 @@ app.use('/node_modules', express.static(modPath));
 app.use('/iep', express.static(iepPath));
 app.use(
   '/',
-  createProxyMiddleware(
+  hpm.createProxyMiddleware(
     (pathName, { query: { qa, dev }, headers: { referer } }) => {
       const ticket = qa || dev;
       const stage = (qa && 'qa') || (dev && 'dev');

@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   modular_wrapper_716460043: {
     media: {
       video: {
