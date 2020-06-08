@@ -33,6 +33,8 @@ app.use(compression());
 app.use(fileupload());
 app.use(express.urlencoded({ extended: true }));
 
+// app.use('/', moduleResolver(root, importMap));
+
 app.use('/src/*', resolve);
 app.use('/static/*', resolve);
 app.get('/iep/list', list);
@@ -51,9 +53,7 @@ app.use(
       const ticket = qa || dev;
       const stage = (qa && 'qa') || (dev && 'dev');
       const block =
-        referer &&
-        (pathName === '/__webpack_hmr' ||
-          (validTicket(ticket, stage) && pathName.endsWith('.js')));
+        referer && validTicket(ticket, stage) && pathName.endsWith('.js');
       return !block;
     },
     {
@@ -71,15 +71,17 @@ app.use(
         const stage = (qa && 'qa') || (dev && 'dev');
         const iep = validTicket(ticket, stage);
         if (!referer && iep) {
-          const _write = res.write;
           let body = '';
+          const _end = res.end;
+          res.end = function () {};
           res.write = function (data) {
             data = data.toString('utf-8');
             body += data;
             if (data.includes('</html>')) {
               try {
-                const buffer = inject(render(iep, body), iep.map);
-                return _write.call(res, buffer);
+                render(iep, body).then((buffer) => {
+                  _end.call(res, inject(buffer));
+                });
               } catch (err) {
                 console.error(err);
               }

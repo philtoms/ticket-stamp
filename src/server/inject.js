@@ -1,5 +1,4 @@
 import pipe from '../utils/pipe';
-import app from '../app';
 
 // optional SSR perf improvement.
 // Not really necessary with defer refined script loading - undeferred script would
@@ -25,7 +24,7 @@ export default (buffer, map) => {
     );
   };
 
-  const injectHtml = pipe([autoPlay, app]);
+  const injectHtml = pipe([autoPlay]);
 
   const injectScript = (buffer) => {
     return buffer.replace(/<script[^<]+<\/script>/g, '').replace(
