@@ -49,7 +49,7 @@ export default async (src, pathname, map, baseDir = process.cwd() + '/src') => {
             selector.startsWith('/') ? baseDir : root
           );
           fs.accessSync(file, fs.F_OK);
-          selector = file;
+          // selector = file;
         } catch (err) {
           if (selector.endsWith('.js')) {
             selector = selector.replace('.js', '/index.js');
@@ -59,7 +59,7 @@ export default async (src, pathname, map, baseDir = process.cwd() + '/src') => {
                 selector.startsWith('/') ? baseDir : root
               );
               fs.accessSync(file, fs.F_OK);
-              selector = file;
+              // selector = file;
             } catch (err) {
               selector = console.error('no access!');
             }

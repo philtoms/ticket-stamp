@@ -1,5 +1,5 @@
 import fs from 'fs';
-import urlencode from 'urlencode';
+import { fork } from 'child_process';
 
 import ImportMap, { goLive } from '../utils/import-map';
 import git from '../utils/git';
@@ -7,12 +7,26 @@ import log from '../utils/log';
 import resolveSrc from './resolve-src';
 
 const iepMap = { prod: [] };
+const serviceMap = {};
 
-const stamp = (data) => ({
-  ...data,
-  user: process.env.USER,
-  timestamp: Date().toString(),
-});
+const stamp = (data) => {
+  restartWorker(data.ticket, data.stage);
+  return {
+    ...data,
+    user: process.env.USER,
+    timestamp: Date().toString(),
+  };
+};
+
+const restartWorker = (ticket, stage) => {
+  if (serviceMap[ticket]) {
+    serviceMap[ticket].kill();
+    delete serviceMap[ticket];
+  }
+  if (stage === 'dev') {
+    serviceMap[ticket] = fork('./src/iep/worker.js');
+  }
+};
 
 export default (modulePath, appPath, srcPath) => {
   const list = (req, res) => {
@@ -54,7 +68,6 @@ export default (modulePath, appPath, srcPath) => {
         map: ImportMap(ticket),
         cache: {},
       });
-
     return res.status(iep ? 200 : 201).send(log('register', iepMap[ticket]));
   };
 
@@ -177,11 +190,13 @@ export default (modulePath, appPath, srcPath) => {
 
   // this render function may become unnecessary when true
   // SSR import mapping is supported.
-  const render = async (ticket, body) => {
-    const params = urlencode(JSON.stringify(ticket));
-    return import(`${appPath}?__iep=${params}`).then((app) =>
-      (app.default || app)(body)
-    );
+  const render = async (iep, body) => {
+    return new Promise((resolve) => {
+      serviceMap[iep.ticket].send({ iep, appPath, body });
+      serviceMap[iep.ticket].on('message', ({ buffer }) => {
+        if (buffer) resolve(buffer);
+      });
+    });
   };
   const resolve = (req, res, next) => {
     const path = `${srcPath}/${req.params[0]}`;
@@ -195,10 +210,14 @@ export default (modulePath, appPath, srcPath) => {
       let src = fs.readFileSync(path, 'utf8');
       const iep = iepMap[ticket] || iepMap.prod[0] || { map: {} };
       if (iep && iep.stage === stage) {
-        src = resolveSrc(src, path, iep.map);
+        resolveSrc(src, path, iep.map).then((src) => {
+          res.setHeader(
+            'Content-Type',
+            'application/javascript; charset=UTF-8'
+          );
+          res.send(src);
+        });
       }
-      res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
-      res.send(src);
     });
   };
 

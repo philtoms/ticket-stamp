@@ -58,6 +58,7 @@ export async function transformSource(source, context, defaultTransformSource) {
   if (url.includes('__iep=')) {
     const [path, ticket] = extractIEP(url);
     source = await resolveSrc(source, path, __iepMap[ticket].map);
+    console.log(source);
     return {
       source,
     };
