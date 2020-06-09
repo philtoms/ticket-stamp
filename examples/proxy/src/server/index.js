@@ -5,7 +5,7 @@ import fileupload from 'express-fileupload';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import hpm from 'http-proxy-middleware';
-import iep from '../iep';
+import ticketStamp from '../../../../src/iep';
 import inject from './inject';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -28,7 +28,7 @@ const {
   validTicket,
   render,
   resolve,
-} = iep(iepPath, appPath, srcPath);
+} = ticketStamp(iepPath, appPath, srcPath);
 
 app.use(compression());
 app.use(cookieParser());
@@ -37,8 +37,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // app.use('/', moduleResolver(root, importMap));
 
+// redirect all source requests to the ticketed entry point
 app.use('/src/*', resolve);
 app.use('/static/*', resolve);
+
+// Stamp Cli API
 app.get('/stamp/list', list);
 app.post('/stamp', register);
 app.put('/stamp/:ticket/promote', promote);
@@ -59,13 +62,14 @@ app.use(
       return !block;
     },
     {
-      target: process.env.TARGET || 'http://localhost:3000',
+      target: process.env.TARGET,
       changeOrigin: true,
       headers: {
         'accept-encoding': 'identity',
       },
       onProxyRes: function (
         proxyRes,
+        // extract the ticket credentials from the query
         { query: { qa, dev }, headers: { referer } },
         res
       ) {
@@ -75,6 +79,8 @@ app.use(
         if (!referer && iep) {
           let body = '';
           const _end = res.end;
+          // transfer ticket to cookie so that it can be retrieved for
+          // all script requests.
           res.cookie('stamp', `${stage}=${ticket}`, {
             maxAge: 60000,
             SameSite: 'None',
@@ -85,6 +91,7 @@ app.use(
             body += data;
             if (data.includes('</html>')) {
               try {
+                // render the body using the ticketed entry point
                 render(iep, body).then((buffer) => {
                   _end.call(res, inject(buffer));
                 });
@@ -98,6 +105,7 @@ app.use(
     }
   )
 );
+
 const listener = app.listen(process.env.PORT || 8080, () => {
   console.log('Your app is listening on port ' + listener.address().port);
 });

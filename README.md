@@ -21,23 +21,23 @@
 The `ticket-stamp` system consists of a cloud service that orchestrates the creation and delivery of ticket stamped import maps, and a CLI tool that is used by the developer to create and operate a ticket workflow.
 
 - Each import map is uniquely bound to a ticket and stored in an IEP (isolated entry point) in the IEP cloud service.
-- The import map is progressively upgraded through module development
+- The import map is progressively upgraded through module development.
 - A page url with a stage=ticket query (`?dev=TKT-001`) will update the script response with the appropriate IEP entries.
 - Typically the browser will have cached all but the ticketed modules.
 
 `ticket-stamp` is designed to work with browsers that natively support [esm modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import).
 
-## Install / run
+## Install
 
-`yarn && TARGET=https://www.mylivesite.com node ./index.js`
+`yarn ticket-stamp`
 
 ## Synopsis
 
-at the command line run `stamp` (or `node stamp.js`)
+at the command line run `npx ticket-stamp`
 
-`$ stamp (or stamp --help)`
-`$ stamp [--ticket] TKT-NUM | tktnum`
-`$ stamp [TKT-NUM] --update --list --promote --verbose`
+`$ npx ticket-stamp (or stamp --help)`<br/>
+`$ npx ticket-stamp [--ticket] TKT-NUM | tktnum`<br/>
+`$ npx ticket-stamp [TKT-NUM] --update --list --promote --verbose`<br/>
 
 ## Options
 

@@ -1,10 +1,15 @@
 import fs from 'fs';
 import { fork } from 'child_process';
+import { fileURLToPath } from 'url';
+import path, { dirname } from 'path';
 
 import ImportMap, { goLive } from '../utils/import-map';
 import git from '../utils/git';
 import log from '../utils/log';
 import resolveSrc from './resolve-src';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const iepMap = { prod: [] };
 const serviceMap = {};
@@ -25,7 +30,7 @@ const restartWorker = (ticket, stage) => {
   }
   if (stage === 'dev') {
     serviceMap[ticket] = {
-      worker: fork('./src/iep/worker.js'),
+      worker: fork(path.resolve(__dirname, 'worker.js')),
     };
   }
 };
