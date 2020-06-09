@@ -1,4 +1,4 @@
-module.exports = ({
+export default ({
   heading,
   description,
 }) => `<div class="styles__Container-sc-1nccejw-0 duwEhV">

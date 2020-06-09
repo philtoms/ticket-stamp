@@ -1,10 +1,15 @@
-import path from 'path';
+import { fileURLToPath } from 'url';
+import path, { dirname } from 'path';
 import express from 'express';
 import fileupload from 'express-fileupload';
 import compression from 'compression';
-import { createProxyMiddleware } from 'http-proxy-middleware';
+import cookieParser from 'cookie-parser';
+import hpm from 'http-proxy-middleware';
 import iep from '../iep';
 import inject from './inject';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 
@@ -26,8 +31,11 @@ const {
 } = iep(iepPath, appPath, srcPath);
 
 app.use(compression());
+app.use(cookieParser());
 app.use(fileupload());
 app.use(express.urlencoded({ extended: true }));
+
+// app.use('/', moduleResolver(root, importMap));
 
 app.use('/src/*', resolve);
 app.use('/static/*', resolve);
@@ -42,14 +50,12 @@ app.use('/node_modules', express.static(modPath));
 app.use('/iep', express.static(iepPath));
 app.use(
   '/',
-  createProxyMiddleware(
+  hpm.createProxyMiddleware(
     (pathName, { query: { qa, dev }, headers: { referer } }) => {
       const ticket = qa || dev;
       const stage = (qa && 'qa') || (dev && 'dev');
       const block =
-        referer &&
-        (pathName === '/__webpack_hmr' ||
-          (validTicket(ticket, stage) && pathName.endsWith('.js')));
+        referer && validTicket(ticket, stage) && pathName.endsWith('.js');
       return !block;
     },
     {
@@ -67,15 +73,21 @@ app.use(
         const stage = (qa && 'qa') || (dev && 'dev');
         const iep = validTicket(ticket, stage);
         if (!referer && iep) {
-          const _write = res.write;
           let body = '';
+          const _end = res.end;
+          res.cookie('stamp', `${stage}=${ticket}`, {
+            maxAge: 60000,
+            SameSite: 'None',
+          });
+          res.end = function () {};
           res.write = function (data) {
             data = data.toString('utf-8');
             body += data;
             if (data.includes('</html>')) {
               try {
-                const buffer = inject(render(iep, body), iep.map);
-                return _write.call(res, buffer);
+                render(iep, body).then((buffer) => {
+                  _end.call(res, inject(buffer));
+                });
               } catch (err) {
                 console.error(err);
               }
@@ -86,7 +98,6 @@ app.use(
     }
   )
 );
-
 const listener = app.listen(process.env.PORT || 8080, () => {
   console.log('Your app is listening on port ' + listener.address().port);
 });

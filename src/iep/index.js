@@ -1,19 +1,34 @@
 import fs from 'fs';
-import overrideRequire from 'override-require';
-import { init, parse } from 'es-module-lexer/dist/lexer.cjs';
+import { fork } from 'child_process';
 
 import ImportMap, { goLive } from '../utils/import-map';
 import git from '../utils/git';
 import log from '../utils/log';
-import split from '../utils/split-path';
+import resolveSrc from './resolve-src';
 
 const iepMap = { prod: [] };
+const serviceMap = {};
 
-const stamp = (data) => ({
-  ...data,
-  user: process.env.USER,
-  timestamp: Date().toString(),
-});
+const stamp = (data) => {
+  restartWorker(data.ticket, data.stage);
+  return {
+    ...data,
+    user: process.env.USER,
+    timestamp: Date().toString(),
+  };
+};
+
+const restartWorker = (ticket, stage) => {
+  if (serviceMap[ticket]) {
+    serviceMap[ticket].worker.kill();
+    delete serviceMap[ticket];
+  }
+  if (stage === 'dev') {
+    serviceMap[ticket] = {
+      worker: fork('./src/iep/worker.js'),
+    };
+  }
+};
 
 export default (modulePath, appPath, srcPath) => {
   const list = (req, res) => {
@@ -53,8 +68,8 @@ export default (modulePath, appPath, srcPath) => {
         status: 'open',
         base,
         map: ImportMap(ticket),
+        cache: {},
       });
-
     return res.status(iep ? 200 : 201).send(log('register', iepMap[ticket]));
   };
 
@@ -172,66 +187,38 @@ export default (modulePath, appPath, srcPath) => {
   // is ready
   const validTicket = (ticket, stage) => {
     const iep = iepMap[ticket] || {};
-    return (iep.stage === stage && iep.map) || iepMap.prod[0];
-  };
-
-  // Currently only CJS-require is supported for SSR dependencies.
-  // On the plus side this makes it easy to override the require
-  // on a ticket by ticket basis.
-  const isOverride = (ticket) => (request) => {
-    return (
-      ticket &&
-      !request.startsWith('/iep') &&
-      !!ticket.imports[request.split('/').pop()]
-    );
-  };
-  const resolveRequest = (ticket) => (request) => {
-    const module = require(`../..${ticket.imports[request.split('/').pop()]}`);
-    return module.default || module;
+    return (iep.stage === stage && iep) || iepMap.prod[0];
   };
 
   // this render function may become unnecessary when true
   // SSR import mapping is supported.
-  const render = (ticket, body) => {
-    const restoreOriginalModuleLoader = overrideRequire(
-      isOverride(ticket),
-      resolveRequest(ticket)
-    );
-    const app = require(appPath);
-    const buffer = (app.default || app)(body);
-    restoreOriginalModuleLoader();
-    return buffer;
+  const render = async (iep, body) => {
+    return new Promise((resolve) => {
+      serviceMap[iep.ticket].worker.send({ iep, appPath, body });
+      serviceMap[iep.ticket].worker.on('message', ({ buffer }) => {
+        if (buffer) resolve(buffer);
+      });
+    });
   };
-
   const resolve = (req, res, next) => {
     const path = `${srcPath}/${req.params[0]}`;
-    fs.access(path, fs.F_OK, async (err) => {
-      if (err) {
-        console.log(path);
-        return next();
-      }
-      const [_, stage = 'prod', ticket] =
-        req.headers.referer.match(/\?(dev|qa|prod)\=([^=^?^#]+)/) || [];
-      let src = fs.readFileSync(path, 'utf8');
-      const iep = iepMap[ticket] || iepMap.prod[0] || { map: {} };
-      if (iep && iep.stage === stage) {
-        const map = iep.map.imports;
-        if (map) {
-          await init;
-          const [imports] = parse(src);
-          src = imports.reduce((acc, { s, e }) => {
-            const importS = acc.substring(s, e);
-            const [name] = split(importS);
-            if (map[name]) {
-              return acc.replace(importS, map[name]);
-            }
-            return acc;
-          }, src);
-        }
-      }
-      res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+    if (!fs.existsSync(path)) {
+      console.log(`NOT FOUND: ${req.params[0]}`);
+      return next();
+    }
+    const [stage = 'prod', ticket] = (req.cookies.stamp || '').split('=');
+
+    const src = serviceMap[ticket][path] || fs.readFileSync(path, 'utf8');
+    const iep = iepMap[ticket] || iepMap.prod[0] || { map: {} };
+    res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+    if (!serviceMap[path] && iep && iep.stage === stage) {
+      resolveSrc(src, path, iep.map).then((src) => {
+        serviceMap[ticket][path] = src;
+        res.send(src);
+      });
+    } else {
       res.send(src);
-    });
+    }
   };
 
   return {
