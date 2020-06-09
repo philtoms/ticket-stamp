@@ -20,11 +20,13 @@ const stamp = (data) => {
 
 const restartWorker = (ticket, stage) => {
   if (serviceMap[ticket]) {
-    serviceMap[ticket].kill();
+    serviceMap[ticket].worker.kill();
     delete serviceMap[ticket];
   }
   if (stage === 'dev') {
-    serviceMap[ticket] = fork('./src/iep/worker.js');
+    serviceMap[ticket] = {
+      worker: fork('./src/iep/worker.js'),
+    };
   }
 };
 
@@ -192,33 +194,31 @@ export default (modulePath, appPath, srcPath) => {
   // SSR import mapping is supported.
   const render = async (iep, body) => {
     return new Promise((resolve) => {
-      serviceMap[iep.ticket].send({ iep, appPath, body });
-      serviceMap[iep.ticket].on('message', ({ buffer }) => {
+      serviceMap[iep.ticket].worker.send({ iep, appPath, body });
+      serviceMap[iep.ticket].worker.on('message', ({ buffer }) => {
         if (buffer) resolve(buffer);
       });
     });
   };
   const resolve = (req, res, next) => {
     const path = `${srcPath}/${req.params[0]}`;
-    fs.access(path, fs.F_OK, async (err) => {
-      if (err) {
-        console.log(path);
-        return next();
-      }
-      const [_, stage = 'prod', ticket] =
-        req.headers.referer.match(/\?(dev|qa|prod)\=([^=^?^#]+)/) || [];
-      let src = fs.readFileSync(path, 'utf8');
-      const iep = iepMap[ticket] || iepMap.prod[0] || { map: {} };
-      if (iep && iep.stage === stage) {
-        resolveSrc(src, path, iep.map).then((src) => {
-          res.setHeader(
-            'Content-Type',
-            'application/javascript; charset=UTF-8'
-          );
-          res.send(src);
-        });
-      }
-    });
+    if (!fs.existsSync(path)) {
+      console.log(`NOT FOUND: ${req.params[0]}`);
+      return next();
+    }
+    const [stage = 'prod', ticket] = (req.cookies.stamp || '').split('=');
+
+    const src = serviceMap[ticket][path] || fs.readFileSync(path, 'utf8');
+    const iep = iepMap[ticket] || iepMap.prod[0] || { map: {} };
+    res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+    if (!serviceMap[path] && iep && iep.stage === stage) {
+      resolveSrc(src, path, iep.map).then((src) => {
+        serviceMap[ticket][path] = src;
+        res.send(src);
+      });
+    } else {
+      res.send(src);
+    }
   };
 
   return {

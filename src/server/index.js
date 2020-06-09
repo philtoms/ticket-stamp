@@ -3,6 +3,7 @@ import path, { dirname } from 'path';
 import express from 'express';
 import fileupload from 'express-fileupload';
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
 import hpm from 'http-proxy-middleware';
 import iep from '../iep';
 import inject from './inject';
@@ -30,6 +31,7 @@ const {
 } = iep(iepPath, appPath, srcPath);
 
 app.use(compression());
+app.use(cookieParser());
 app.use(fileupload());
 app.use(express.urlencoded({ extended: true }));
 
@@ -73,6 +75,10 @@ app.use(
         if (!referer && iep) {
           let body = '';
           const _end = res.end;
+          res.cookie('stamp', `${stage}=${ticket}`, {
+            maxAge: 60000,
+            SameSite: 'None',
+          });
           res.end = function () {};
           res.write = function (data) {
             data = data.toString('utf-8');
@@ -92,8 +98,6 @@ app.use(
     }
   )
 );
-let iepSocket;
 const listener = app.listen(process.env.PORT || 8080, () => {
   console.log('Your app is listening on port ' + listener.address().port);
 });
-listener.on('connection', (socket) => (iepSocket = socket));
