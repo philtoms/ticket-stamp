@@ -1,6 +1,6 @@
 # Ticket Stamp
 
-`ticket-stamp` is a very fast and lightweight development system that supports ticket driven staged workflows. Modules under active ticket development are automatically integrated into the current production application to create a unique and isolated application entry point (IEP). The application is live - except for the modules in the ticket.
+`ticket-stamp` is a very fast and lightweight development pipeline that supports ticket driven staged workflows. Modules under active ticket development are automatically integrated into the current production application to create a unique and isolated application entry point (IEP). The application is live - except for the modules in the ticket.
 
 ## Features
 
@@ -18,11 +18,11 @@
 
 ## How it works
 
-The `ticket-stamp` system consists of a cloud service that orchestrates the creation and delivery of ticket stamped imports, and a CLI tool that is used by the developer to create and operate a ticket workflow.
+The `ticket-stamp` system consists of a cloud service that orchestrates the creation and delivery of ticket stamped import maps, and a CLI tool that is used by the developer to create and operate a ticket workflow.
 
 - Each import map is uniquely bound to a ticket and stored in an IEP (isolated entry point) in the IEP cloud service.
-- The IEP is progressively upgraded through module development
-- A page url with a stage:ticket query (`?dev=TKT-001`) will update the script response with the appropriate IEP entries.
+- The import map is progressively upgraded through module development
+- A page url with a stage=ticket query (`?dev=TKT-001`) will update the script response with the appropriate IEP entries.
 - Typically the browser will have cached all but the ticketed modules.
 
 `ticket-stamp` is designed to work with browsers that natively support [esm modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import).
@@ -93,7 +93,6 @@ The ticket resources are closed but not removed from the workflow system. The ti
 
 - Upgrade `--watch` for add, change, delete
 - Implement IEP control panel - mainly for QA
-- Remove _CJS require only_ restriction on server side imports
 - Plugin architecture - basically rewrite the whole IEP M/w to work with plugins
 - Policy plugin - move all of the promote decisions out of IEP
 - Authentication plugin - Integrate Github, Atlassian, etc single sign on

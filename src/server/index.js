@@ -13,7 +13,7 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-const iepPath = path.resolve(__dirname, '../../iep');
+const iepPath = path.resolve(__dirname, '../../stamped');
 const srcPath = path.resolve(__dirname, '../../src');
 const appPath = path.resolve(__dirname, '../app/index.js');
 const modPath = path.resolve(__dirname, '../../node_modules');
@@ -39,15 +39,15 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/src/*', resolve);
 app.use('/static/*', resolve);
-app.get('/iep/list', list);
-app.post('/iep', register);
-app.put('/iep/:ticket/promote', promote);
-app.put('/iep/:ticket/revert', revert);
-app.put('/iep/:ticket/close', close);
-app.put('/iep/:ticket', update);
+app.get('/stamp/list', list);
+app.post('/stamp', register);
+app.put('/stamp/:ticket/promote', promote);
+app.put('/stamp/:ticket/revert', revert);
+app.put('/stamp/:ticket/close', close);
+app.put('/stamp/:ticket', update);
 
 app.use('/node_modules', express.static(modPath));
-app.use('/iep', express.static(iepPath));
+app.use('/stamped', express.static(iepPath));
 app.use(
   '/',
   hpm.createProxyMiddleware(

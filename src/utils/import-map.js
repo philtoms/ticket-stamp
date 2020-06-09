@@ -7,7 +7,7 @@ export default (name, hashName, map = defaultMap) => {
     ...map,
     imports: {
       ...map.imports,
-      ...(hashName ? { [name]: `/iep/${hashName}` } : {}),
+      ...(hashName ? { [name]: `/stamped/${hashName}` } : {}),
     },
   };
   return map;

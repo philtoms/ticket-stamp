@@ -6,7 +6,7 @@ import fetch from '../utils/fetch';
 import log from '../utils/log';
 import split from '../utils/split-path';
 
-const iepServer = 'http://localhost:8080/iep';
+const iepServer = 'http://localhost:8080/stamp';
 let ticketId;
 
 export const register = (ticket, verbose) => {
