@@ -1,6 +1,6 @@
 .DS_Store
 modules
-/stamped
+stamped
 node_modules
 npm-debug.log
 .vscode

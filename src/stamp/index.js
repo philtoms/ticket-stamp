@@ -1,7 +1,7 @@
 import options, { optionDefinitions } from './options';
 import usage from './usage';
 import { register, update, list, promote, revert, close } from './api';
-debugger;
+
 (async () => {
   if (options.ticket) {
     await register(options.ticket, options.verbose);
