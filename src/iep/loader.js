@@ -4,7 +4,7 @@
 // https://nodejs.org/api/esm.html#esm_code_resolve_code_hook
 
 import urlencode from 'urlencode';
-import resolveSrc from './resolve-src';
+import resolver from './resolver';
 
 const __iepMap = {};
 
@@ -57,7 +57,7 @@ export async function transformSource(source, context, defaultTransformSource) {
   const { url } = context;
   if (url.includes('__iep=')) {
     const [path, ticket] = extractIEP(url);
-    source = await resolveSrc(source, path, __iepMap[ticket].map);
+    source = await resolver(source, path, __iepMap[ticket].map);
     console.log(source);
     return {
       source,
