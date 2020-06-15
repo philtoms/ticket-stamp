@@ -20,9 +20,14 @@ const resolvePackage = (pathname) => {
   }
 };
 
-export default async (src, pathname, map, baseDir = process.cwd() + '/src') => {
+export default async (
+  source,
+  pathname,
+  map,
+  baseDir = process.cwd() + '/src'
+) => {
   await init;
-  const [imports] = parse(src);
+  const [imports] = parse(source);
   const root = path.parse(pathname).dir;
   return imports.reverse().reduce((acc, { s, e, d }) => {
     if (d !== -1) return acc;
@@ -70,5 +75,5 @@ export default async (src, pathname, map, baseDir = process.cwd() + '/src') => {
       }
     }
     return selector ? acc.substr(0, s) + selector + acc.substr(e) : acc;
-  }, src);
+  }, source);
 };

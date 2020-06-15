@@ -1,110 +1,40 @@
 import { fileURLToPath } from 'url';
 import path, { dirname } from 'path';
 import express from 'express';
-import fileupload from 'express-fileupload';
 import compression from 'compression';
-import cookieParser from 'cookie-parser';
-import hpm from 'http-proxy-middleware';
-import ticketStamp from '../../../../src/iep';
 import inject from './inject';
+
+import ticketStamp from '../../../../src/iep';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
 
-const iepPath = path.resolve(__dirname, '../../stamped');
+const stampedPath = path.resolve(__dirname, '../../stamped');
 const srcPath = path.resolve(__dirname, '../../src');
-const appPath = path.resolve(__dirname, '../app/index.js');
+const iepEntry = path.resolve(__dirname, '../app/index.js');
 const modPath = path.resolve(__dirname, '../../node_modules');
 
-const {
-  list,
-  register,
-  promote,
-  update,
-  revert,
-  close,
-  validTicket,
-  render,
-  resolve,
-} = ticketStamp(iepPath, appPath, srcPath);
+const { stamp } = ticketStamp({
+  stampedPath,
+  srcPath,
+  iepEntry,
+  proxy: {
+    changeOrigin: true,
+    headers: {
+      'accept-encoding': 'identity',
+    },
+    target: process.env.TARGET,
+  },
+  inject,
+});
 
 app.use(compression());
-app.use(cookieParser());
-app.use(fileupload());
-app.use(express.urlencoded({ extended: true }));
-
-// app.use('/', moduleResolver(root, importMap));
-
-// redirect all source requests to the ticketed entry point
-app.use('/src/*', resolve);
-app.use('/static/*', resolve);
-
-// Stamp Cli API
-app.get('/stamp/list', list);
-app.post('/stamp', register);
-app.put('/stamp/:ticket/promote', promote);
-app.put('/stamp/:ticket/revert', revert);
-app.put('/stamp/:ticket/close', close);
-app.put('/stamp/:ticket', update);
+app.use(stamp);
 
 app.use('/node_modules', express.static(modPath));
-app.use('/stamped', express.static(iepPath));
-app.use(
-  '/',
-  hpm.createProxyMiddleware(
-    (pathName, { query: { qa, dev }, headers: { referer } }) => {
-      const ticket = qa || dev;
-      const stage = (qa && 'qa') || (dev && 'dev');
-      const block =
-        referer && validTicket(ticket, stage) && pathName.endsWith('.js');
-      return !block;
-    },
-    {
-      target: process.env.TARGET,
-      changeOrigin: true,
-      headers: {
-        'accept-encoding': 'identity',
-      },
-      onProxyRes: function (
-        proxyRes,
-        // extract the ticket credentials from the query
-        { query: { qa, dev }, headers: { referer } },
-        res
-      ) {
-        const ticket = qa || dev;
-        const stage = (qa && 'qa') || (dev && 'dev');
-        const iep = validTicket(ticket, stage);
-        if (!referer && iep) {
-          let body = '';
-          const _end = res.end;
-          // transfer ticket to cookie so that it can be retrieved for
-          // all script requests.
-          res.cookie('stamp', `${stage}=${ticket}`, {
-            maxAge: 60000,
-            SameSite: 'None',
-          });
-          res.end = function () {};
-          res.write = function (data) {
-            data = data.toString('utf-8');
-            body += data;
-            if (data.includes('</html>')) {
-              try {
-                // render the body using the ticketed entry point
-                render(iep, body).then((buffer) => {
-                  _end.call(res, inject(buffer));
-                });
-              } catch (err) {
-                console.error(err);
-              }
-            }
-          };
-        }
-      },
-    }
-  )
-);
+app.use('/stamped', express.static(stampedPath));
 
 const listener = app.listen(process.env.PORT || 8080, () => {
   console.log('Your app is listening on port ' + listener.address().port);

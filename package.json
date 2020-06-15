@@ -5,8 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "test": "ava",
-    "start": "node --experimental-loader ./src/utils/loader.js --experimental-specifier-resolution=node ./index.js"
+    "test": "ava"
   },
   "dependencies": {
     "chokidar": "^3.4.0",
