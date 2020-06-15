@@ -20,12 +20,9 @@ const resolvePackage = (pathname) => {
   }
 };
 
-export default async (
-  source,
-  pathname,
-  map,
-  baseDir = process.cwd() + '/src'
-) => {
+const srcDir = process.env.SRC || process.cwd() + '/src';
+
+export default async (source, pathname, map, baseDir = srcDir) => {
   await init;
   const [imports] = parse(source);
   const root = path.parse(pathname).dir;

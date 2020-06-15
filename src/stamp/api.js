@@ -6,6 +6,8 @@ import fetch from '../utils/fetch';
 import log from '../utils/log';
 import split from '../utils/split-path';
 
+const srcDir = process.env.SRC || process.cwd() + '/src';
+
 const iepServer = 'http://localhost:8080/stamp';
 let ticketId;
 
@@ -18,7 +20,7 @@ export const register = (ticket, verbose) => {
   return fetch('register', iepServer, 'POST', form, verbose);
 };
 
-export const update = (files, folder = './src', verbose) => {
+export const update = (files, folder = srcDir, verbose) => {
   if (files.length === 0) {
     log(`watching ${folder}:`);
     chokidar.watch(folder).on('change', (path) => {

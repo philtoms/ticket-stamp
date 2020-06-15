@@ -2,7 +2,7 @@ import fs from 'fs';
 import ImportMap from '../../utils/import-map';
 import log from '../../utils/log';
 
-export default (iepMap, stamp, stampedPath) => (req, res) => {
+export default (iepMap, stamp, stampDir) => (req, res) => {
   const { ticket } = req.params;
   const { name, type } = req.body;
   const { md5, data } = req.files.file;
@@ -14,7 +14,7 @@ export default (iepMap, stamp, stampedPath) => (req, res) => {
         .send(`ticket ${ticket} is already at ${iepMap[ticket].stage} stage`);
     }
     const iepName = `${name}.${md5}.${type}`;
-    fs.writeFileSync(`${stampedPath}/${iepName}`, data);
+    fs.writeFileSync(`${stampDir}/${iepName}`, data);
     // Will probably split into SSR and CSR imports
     const alias = type === 'js' ? name : `${name}.${type}`;
 

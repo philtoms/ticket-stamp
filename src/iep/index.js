@@ -45,7 +45,7 @@ const restartWorker = (ticket, stage) => {
   }
 };
 
-export default ({ stampedPath, entry, srcPath, proxy, inject }) => {
+export default ({ stampDir, entry, proxy, inject }) => {
   // export a ticketed map to the application. Use prod until the ticket
   // is ready
   const validTicket = (ticket, stage) => {
@@ -68,17 +68,12 @@ export default ({ stampedPath, entry, srcPath, proxy, inject }) => {
   stamp.use(fileupload());
   stamp.use(cookieParser());
 
-  stamp.get(
-    ['/src/*', '/static/*'],
-    resolveMW(srcPath, iepMap, serviceMap, resolver)
-  );
-
   // Stamp Cli API
   stamp.get('/stamp/list', listMW(iepMap));
   stamp.put('/stamp/:ticket/promote', promoteMW(iepMap, stampTicket));
   stamp.put('/stamp/:ticket/revert', revertMW(iepMap, stampTicket));
   stamp.put('/stamp/:ticket/close', closeMW(iepMap, stampTicket));
-  stamp.put('/stamp/:ticket', updateMW(iepMap, stampTicket, stampedPath));
+  stamp.put('/stamp/:ticket', updateMW(iepMap, stampTicket, stampDir));
   stamp.post('/stamp', registerMW(iepMap, stampTicket));
 
   if (proxy) {
@@ -93,7 +88,8 @@ export default ({ stampedPath, entry, srcPath, proxy, inject }) => {
 
   return {
     validTicket,
-    render,
     stamp,
+    render,
+    resolve: resolveMW(iepMap, serviceMap, resolver),
   };
 };

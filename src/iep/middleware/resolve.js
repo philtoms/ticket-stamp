@@ -1,6 +1,10 @@
 import fs from 'fs';
 
-export default (srcPath, iepMap, serviceMap, resolve) => (req, res, next) => {
+export default (iepMap, serviceMap, resolve) => (srcPath) => (
+  req,
+  res,
+  next
+) => {
   const path = `${srcPath}/${req.params[0]}`;
   if (!fs.existsSync(path)) {
     console.error(`NOT FOUND: ${req.params[0]}`);
