@@ -1,5 +1,5 @@
-import ImportMap from '../../utils/import-map';
-import log from '../../utils/log';
+import ImportMap from '../utils/import-map';
+import log from '../utils/log';
 
 // tickets could be registered directly with IEP. In this workflow, ticket registration
 // would be a distinct step before developer registration and would typically be performed

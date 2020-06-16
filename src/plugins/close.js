@@ -1,4 +1,4 @@
-import log from '../../utils/log';
+import log from '../utils/log';
 
 export default (iepMap, stamp) => (req, res) => {
   const { ticket } = req.params;

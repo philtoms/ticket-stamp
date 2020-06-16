@@ -1,4 +1,4 @@
-import pipe from '../utils/pipe';
+import pipe from '../../../../src/utils/pipe';
 
 // optional SSR perf improvement.
 // Not really necessary with defer refined script loading - undeferred script would

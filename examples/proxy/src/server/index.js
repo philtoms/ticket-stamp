@@ -27,6 +27,9 @@ const { stamp, resolve } = ticketStamp({
     target: process.env.TARGET,
   },
   inject,
+  plugins: {
+    promote: ['git-policy', 'promote'],
+  },
 });
 
 app.use(compression());

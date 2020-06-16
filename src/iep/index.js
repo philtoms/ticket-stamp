@@ -2,15 +2,10 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import fileupload from 'express-fileupload';
 
-import proxyMW from './middleware/proxy';
-import listMW from './middleware/list';
-import promoteMW from './middleware/promote';
-import revertMW from './middleware/revert';
-import resolveMW from './middleware/resolve';
-import registerMW from './middleware/register';
-import updateMW from './middleware/update';
-import closeMW from './middleware/close';
+import proxyMW from '../plugins/proxy';
+import resolveMW from '../plugins/resolve';
 import resolver from './resolver';
+import mw from './middleware';
 
 var stamp = express();
 
@@ -21,7 +16,7 @@ import path, { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export default ({ stampDir, entry, proxy, inject }) => {
+export default ({ stampDir, entry, proxy, inject, plugins }) => {
   const iepMap = { prod: [] };
   const serviceMap = {};
 
@@ -68,14 +63,30 @@ export default ({ stampDir, entry, proxy, inject }) => {
   stamp.use(cookieParser());
 
   // Stamp Cli API
-  stamp.get('/stamp/list', listMW(iepMap));
-  stamp.put('/stamp/:ticket/promote', promoteMW(iepMap, stampTicket));
-  stamp.put('/stamp/:ticket/revert', revertMW(iepMap, stampTicket));
-  stamp.put('/stamp/:ticket/close', closeMW(iepMap, stampTicket));
-  stamp.put('/stamp/:ticket', updateMW(iepMap, stampTicket, stampDir));
-  stamp.post('/stamp', registerMW(iepMap, stampTicket));
+  stamp.get('/stamp/list', mw(plugins.list || ['list'], iepMap));
+  stamp.put(
+    '/stamp/:ticket/promote',
+    mw(plugins.promote || ['promote'], iepMap, stampTicket)
+  );
+  stamp.put(
+    '/stamp/:ticket/revert',
+    mw(plugins.revert || ['revert'], iepMap, stampTicket)
+  );
+  stamp.put(
+    '/stamp/:ticket/close',
+    mw(plugins.close || ['close'], iepMap, stampTicket)
+  );
+  stamp.put(
+    '/stamp/:ticket',
+    mw(plugins.update || ['update'], iepMap, stampTicket, stampDir)
+  );
+  stamp.post(
+    '/stamp',
+    mw(plugins.register || ['register'], iepMap, stampTicket)
+  );
 
   const renderOnEntry = render(entry, inject || ((buffer) => buffer));
+
   if (proxy) {
     stamp.use(proxyMW(proxy, validTicket, renderOnEntry));
   }
