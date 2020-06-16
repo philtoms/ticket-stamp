@@ -21,31 +21,31 @@ import path, { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const iepMap = { prod: [] };
-const serviceMap = {};
-
-const stampTicket = (data) => {
-  restartWorker(data.ticket, data.stage);
-  return {
-    ...data,
-    user: process.env.USER,
-    timestamp: Date().toString(),
-  };
-};
-
-const restartWorker = (ticket, stage) => {
-  if (serviceMap[ticket]) {
-    serviceMap[ticket].worker.kill();
-    delete serviceMap[ticket];
-  }
-  if (stage === 'dev') {
-    serviceMap[ticket] = {
-      worker: fork(path.resolve(__dirname, 'worker.js')),
-    };
-  }
-};
-
 export default ({ stampDir, entry, proxy, inject }) => {
+  const iepMap = { prod: [] };
+  const serviceMap = {};
+
+  const stampTicket = (data) => {
+    restartWorker(data.ticket, data.stage);
+    return {
+      ...data,
+      user: process.env.USER,
+      timestamp: Date().toString(),
+    };
+  };
+
+  const restartWorker = (ticket, stage) => {
+    if (serviceMap[ticket]) {
+      serviceMap[ticket].worker.kill();
+      delete serviceMap[ticket];
+    }
+    if (stage === 'dev') {
+      serviceMap[ticket] = {
+        worker: fork(path.resolve(__dirname, 'worker.js')),
+      };
+    }
+  };
+
   // export a ticketed map to the application. Use prod until the ticket
   // is ready
   const validTicket = (ticket, stage) => {
@@ -53,13 +53,12 @@ export default ({ stampDir, entry, proxy, inject }) => {
     return (iep.stage === stage && iep) || iepMap.prod[0];
   };
 
-  // this render function may become unnecessary when true
-  // SSR import mapping is supported.
-  const render = async (iep, body) => {
+  const render = (entry, inject) => (iep, body) => {
     return new Promise((resolve) => {
-      serviceMap[iep.ticket].worker.send({ iep, entry, body });
-      serviceMap[iep.ticket].worker.on('message', ({ buffer }) => {
-        if (buffer) resolve(buffer);
+      const { worker } = serviceMap[iep.ticket];
+      worker.send({ iep, entry, body });
+      worker.on('message', ({ buffer }) => {
+        if (buffer) resolve(inject(buffer));
       });
     });
   };
@@ -76,20 +75,15 @@ export default ({ stampDir, entry, proxy, inject }) => {
   stamp.put('/stamp/:ticket', updateMW(iepMap, stampTicket, stampDir));
   stamp.post('/stamp', registerMW(iepMap, stampTicket));
 
+  const renderOnEntry = render(entry, inject || ((buffer) => buffer));
   if (proxy) {
-    stamp.use(
-      proxyMW(proxy, validTicket, (iep, body) =>
-        render(iep, body).then((buffer) => {
-          _end.call(res, inject(buffer));
-        })
-      )
-    );
+    stamp.use(proxyMW(proxy, validTicket, renderOnEntry));
   }
 
   return {
     validTicket,
     stamp,
-    render,
+    render: renderOnEntry,
     resolve: resolveMW(iepMap, serviceMap, resolver),
   };
 };

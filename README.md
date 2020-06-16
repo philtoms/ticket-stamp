@@ -93,7 +93,6 @@ The ticket resources are closed but not removed from the workflow system. The ti
 
 - Upgrade `--watch` for add, change, delete
 - Implement IEP control panel - mainly for QA
-- Plugin architecture - basically rewrite the whole IEP M/w to work with plugins
 - Policy plugin - move all of the promote decisions out of IEP
 - Authentication plugin - Integrate Github, Atlassian, etc single sign on
 - Promotion plugin - orchestrate promotion through customized build steps.
