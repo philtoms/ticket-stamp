@@ -1,6 +1,5 @@
-import { goLive } from '../../utils/import-map';
-import git from '../../utils/git';
-import log from '../../utils/log';
+import { goLive } from '../utils/import-map';
+import log from '../utils/log';
 
 // promote a ticket through dev -> QA -> prod
 // considerations:
@@ -10,10 +9,7 @@ import log from '../../utils/log';
 //   build has completed cleanly.
 export default (iepMap, stamp) => (req, res) => {
   const { ticket } = req.params;
-  const { isAncestor, status, base } = git();
-  if (!isAncestor || status) {
-    return res.status(403).send(status);
-  }
+  const base = req.promote; // expecting base from git-policy but not a blocker
 
   const iep = iepMap[ticket];
   if (iep) {

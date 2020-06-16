@@ -1,6 +1,6 @@
 import fs from 'fs';
-import ImportMap from '../../utils/import-map';
-import log from '../../utils/log';
+import ImportMap from '../utils/import-map';
+import log from '../utils/log';
 
 export default (iepMap, stamp, stampDir) => (req, res) => {
   const { ticket } = req.params;
