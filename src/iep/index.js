@@ -61,7 +61,17 @@ export default ({ stampDir, entry, proxy, inject, plugins }) => {
   stamp.use(express.urlencoded({ extended: true }));
   stamp.use(fileupload());
   stamp.use(cookieParser());
-
+  stamp.use((req, res, next) => {
+    req.stamp = {
+      promote: {},
+      update: {},
+      revert: {},
+      close: {},
+      update: {},
+      register: {},
+    };
+    next();
+  });
   // Stamp Cli API
   stamp.get('/stamp/list', mw(plugins.list || ['list'], iepMap));
   stamp.put(

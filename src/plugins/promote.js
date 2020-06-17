@@ -9,7 +9,7 @@ import log from '../utils/log';
 //   build has completed cleanly.
 export default (iepMap, stamp) => (req, res) => {
   const { ticket } = req.params;
-  const base = req.promote; // expecting base from git-policy but not a blocker
+  const { base } = req.stamp.promote; // expecting base from git-policy but not a blocker
 
   const iep = iepMap[ticket];
   if (iep) {

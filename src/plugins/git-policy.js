@@ -11,9 +11,12 @@ export default (iepMap, stamp) => (req, res) => {
   if (!isAncestor || status) {
     return res.status(403).send(status);
   }
-  req.promote = {
-    ...req.promote,
-    base,
+  req.stamp = {
+    ...req.stamp,
+    promote: {
+      ...req.promote,
+      base,
+    },
   };
 
   return true;
