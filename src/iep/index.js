@@ -6,7 +6,7 @@ import fileupload from 'express-fileupload';
 import proxyMW from '../plugins/proxy';
 import resolveMW from '../plugins/resolve';
 import resolver from './resolver';
-import localCache from './localCache';
+import localCache from '../utils/localCache';
 import load, { bind } from './middleware';
 import { serviceMap } from '../utils/stamp';
 
@@ -61,7 +61,10 @@ export default ({ stampDir, entry, inject, plugins, cache = localCache }) => {
     '/stamp/:ticket/revert',
     bind(pipeline.revert || ['revert'], iepMap)
   );
-  stamp.put('/stamp/:ticket/close', bind(pipeline.close || ['close'], iepMap));
+  stamp.put(
+    '/stamp/:ticket/remove',
+    bind(pipeline.remove || ['remove'], iepMap)
+  );
   stamp.put(
     '/stamp/:ticket',
     bind(pipeline.update || ['update'], iepMap, stampDir)

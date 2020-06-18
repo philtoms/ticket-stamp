@@ -11,11 +11,7 @@ export default (iepMap) => async (req, res) => {
   try {
     const {
       params: { ticket },
-      stamp: {
-        promote: { base },
-        user,
-        stage: reqStage,
-      },
+      stamp: { promote: { base } = {}, user, stage: reqStage },
     } = req;
 
     const iep = await iepMap.get(ticket);
