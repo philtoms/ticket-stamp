@@ -1,8 +1,9 @@
 import fs from 'fs';
 import ImportMap from '../utils/import-map';
 import log from '../utils/log';
+import stamp from '../utils/stamp';
 
-export default (iepMap, stamp, stampDir) => async (req, res) => {
+export default (iepMap, stampDir) => async (req, res) => {
   try {
     const { ticket } = req.params;
     const { name, type } = req.body;
@@ -22,7 +23,7 @@ export default (iepMap, stamp, stampDir) => async (req, res) => {
       const stamped = stamp({
         ...iep,
         map: ImportMap(alias, iepName, iep.map),
-        status: 'open',
+        status: 'updated',
         files: [...(iep.files || []).filter((file) => file !== alias), alias],
       });
       iepMap.set(ticket, stamped);

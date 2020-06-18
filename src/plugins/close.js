@@ -1,12 +1,18 @@
+import stamp from '../utils/stamp';
 import log from '../utils/log';
 
-export default (iepMap, stamp) => async (req, res) => {
+export default (iepMap) => async (req, res) => {
   try {
-    const { ticket } = req.params;
+    const {
+      params: { ticket },
+      stamp: { user },
+    } = req;
+
     const iep = await iepMap.get(ticket);
     if (iep) {
       const stamped = stamp({
         ...iep,
+        user,
         status: 'closed',
       });
 

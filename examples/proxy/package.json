@@ -5,7 +5,7 @@
   "description": "This example defers all script handling to `ticket-stamp` middleware",
   "scripts": {
     "start": "node --experimental-loader ../../src/iep/loader.js --experimental-specifier-resolution=node index.js",
-    "stamp": "node ../../stamp"
+    "stamp": "node --experimental-specifier-resolution=node ../../stamp"
   },
   "dependencies": {
     "compression": "^1.7.4",

@@ -6,8 +6,8 @@ import ofType from '../utils/ofType';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export default (plugins, ...args) => {
-  const mw = Promise.all(
+const load = (plugins, ...args) =>
+  Promise.all(
     plugins.map((plugin) =>
       import(
         fs.existsSync(
@@ -18,6 +18,24 @@ export default (plugins, ...args) => {
       ).then((module) => module.default(...args))
     )
   );
+
+export default (app, plugins, args) =>
+  Promise.all(
+    Object.entries(plugins).map(([plugin, options]) => {
+      const {
+        mount: { path, method },
+        ...rest
+      } = options;
+      return load([plugin], { ...rest, ...args }).then((module) => {
+        if (method) {
+          app[method.toLowerCase()](path, module);
+        } else app.use(path, module);
+      });
+    })
+  );
+
+export const bind = (plugins, ...args) => {
+  const mw = load(plugins, ...args);
 
   return (req, res, next) =>
     mw.then((modules) => {

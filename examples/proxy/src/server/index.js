@@ -19,16 +19,36 @@ const modPath = path.resolve(__dirname, '../../node_modules');
 const { stamp, resolve } = ticketStamp({
   stampDir,
   entry,
-  proxy: {
-    changeOrigin: true,
-    headers: {
-      'accept-encoding': 'identity',
-    },
-    target: process.env.TARGET,
-  },
   inject,
   plugins: {
-    promote: ['git-policy', 'promote'],
+    proxy: {
+      changeOrigin: true,
+      headers: {
+        'accept-encoding': 'identity',
+      },
+      target: process.env.TARGET,
+    },
+    jira: {
+      mount: {
+        method: 'POST',
+        path: '/webhooks/jira',
+      },
+      issueKeys: {
+        user: 'user/displayName',
+        ticket: 'issue/key',
+        done: 'issue/fields/resolutiondate',
+        workflow: 'issue/fields/status/name',
+      },
+      workflowMap: {
+        Backlog: 'dev',
+        'Selected for Development': 'dev',
+        'In Progress': 'qa',
+        Done: 'prod',
+      },
+    },
+    pipeline: {
+      promote: ['git-policy', 'promote'],
+    },
   },
 });
 

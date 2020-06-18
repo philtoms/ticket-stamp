@@ -1,4 +1,5 @@
 import ImportMap from '../utils/import-map';
+import stamp from '../utils/stamp';
 import log from '../utils/log';
 
 // tickets could be registered directly with IEP. In this workflow, ticket registration
@@ -6,25 +7,30 @@ import log from '../utils/log';
 // by the ticket / workflow manager.
 // An alternative is to integrate the IEP service with the ticket service.
 // This alpha just accepts a unique ticket number
-export default (iepMap, stamp) => async (req, res) => {
+export default (iepMap) => async (req, res) => {
   try {
-    const { ticket, base } = req.body;
+    const {
+      body: { ticket, base },
+      stamp: { user },
+    } = req;
+
     const prod = await iepMap.get('prod');
     const prodTicket = prod && prod.find((entry) => entry.ticket === ticket);
+    // don't overwrite existing ticket work
+    // - use update to do that
     if (prodTicket) {
       return res.status(200).send(prodTicket);
     }
-    // don't overwrite existing ticket work
-    // - use update to do that
     const iep = await iepMap.get(ticket);
     const stamped =
       iep ||
       stamp({
+        user,
         ticket,
         stage: 'dev',
-        status: 'open',
+        status: 'registered',
         base,
-        map: ImportMap(ticket, null, prod[0]),
+        map: ImportMap(ticket, null, (prod[0] || {}).map),
         cache: {},
       });
     iepMap.set(ticket, stamped);
