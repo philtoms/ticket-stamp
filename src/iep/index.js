@@ -5,6 +5,7 @@ import fileupload from 'express-fileupload';
 import proxyMW from '../plugins/proxy';
 import resolveMW from '../plugins/resolve';
 import resolver from './resolver';
+import localCache from './localCache';
 import mw from './middleware';
 
 var stamp = express();
@@ -16,8 +17,15 @@ import path, { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export default ({ stampDir, entry, proxy, inject, plugins }) => {
-  const iepMap = { prod: [] };
+export default ({
+  stampDir,
+  entry,
+  proxy,
+  inject,
+  plugins,
+  cache = localCache,
+}) => {
+  const { iepMap } = cache;
   const serviceMap = {};
 
   const stampTicket = (data) => {
@@ -43,9 +51,10 @@ export default ({ stampDir, entry, proxy, inject, plugins }) => {
 
   // export a ticketed map to the application. Use prod until the ticket
   // is ready
-  const validTicket = (ticket, stage) => {
-    const iep = iepMap[ticket] || {};
-    return (iep.stage === stage && iep) || iepMap.prod[0];
+  const validTicket = async (ticket, stage) => {
+    const iep = (await iepMap.get(ticket)) || {};
+    if (iep.stage === stage) return iep;
+    return (await iepMap.get('prod'))[0];
   };
 
   const render = (entry, inject) => (iep, body) => {

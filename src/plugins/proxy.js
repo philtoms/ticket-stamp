@@ -2,16 +2,16 @@ import hpm from 'http-proxy-middleware';
 
 export default (options, validate, render) =>
   hpm.createProxyMiddleware(
-    (pathName, { query: { qa, dev }, headers: { referer } }) => {
+    async (pathName, { query: { qa, dev }, headers: { referer } }) => {
       const ticket = qa || dev;
       const stage = (qa && 'qa') || (dev && 'dev');
       const block =
-        referer && validate(ticket, stage) && pathName.endsWith('.js');
+        referer && (await validate(ticket, stage)) && pathName.endsWith('.js');
       return !block;
     },
     {
       ...options,
-      onProxyRes: function (
+      onProxyRes: async function (
         proxyRes,
         // extract the ticket credentials from the query
         { query: { qa, dev }, headers: { referer } },
@@ -19,7 +19,7 @@ export default (options, validate, render) =>
       ) {
         const ticket = qa || dev;
         const stage = (qa && 'qa') || (dev && 'dev');
-        const iep = validate(ticket, stage);
+        const iep = await validate(ticket, stage);
         if (!referer && iep) {
           let body = '';
           const _end = res.end;

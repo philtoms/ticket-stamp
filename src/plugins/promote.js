@@ -1,4 +1,3 @@
-import { goLive } from '../utils/import-map';
 import log from '../utils/log';
 
 // promote a ticket through dev -> QA -> prod
@@ -7,25 +6,33 @@ import log from '../utils/log';
 // - if the promotion is from QA to prod, the HEAD could be merged in to master
 // - git hooks can be integrated into the promotion checks to ensure that the
 //   build has completed cleanly.
-export default (iepMap, stamp) => (req, res) => {
-  const { ticket } = req.params;
-  const { base } = req.stamp.promote; // expecting base from git-policy but not a blocker
+export default (iepMap, stamp) => async (req, res) => {
+  try {
+    const { ticket } = req.params;
+    const { base } = req.stamp.promote; // expecting base from git-policy but not a blocker
 
-  const iep = iepMap[ticket];
-  if (iep) {
-    const stage = iep.stage === 'dev' ? 'qa' : 'prod';
-    iepMap[ticket] = stamp({
-      ...iep,
-      base,
-      stage,
-    });
-    if (stage === 'prod') {
-      iepMap.prod.unshift(iepMap[ticket]);
-      delete iepMap[ticket];
-      goLive(iepMap.prod[0].map);
+    const iep = await iepMap.get(ticket);
+    if (iep) {
+      const stage = iep.stage === 'dev' ? 'qa' : 'prod';
+      const stamped = stamp({
+        ...iep,
+        base,
+        stage,
+      });
+      if (stage === 'prod') {
+        const prod = await iepMap.get('prod');
+        prod.unshift(stamped);
+        iepMap.remove(ticket);
+        iepMap.set('prod', prod);
+        return res.send(log('promote', prod[0]));
+      }
+      iepMap.set(ticket, stamped);
+      return res.send(log('promote', stamped));
     }
-    return res.send(log('promote', iepMap[ticket] || iepMap.prod[0]));
-  }
 
-  res.status(404).send(`unrecognized ticket ${ticket}`);
+    res.status(404).send(`unrecognized ticket ${ticket}`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
 };

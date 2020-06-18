@@ -13,12 +13,12 @@ const app = express();
 
 const stampDir = path.resolve(__dirname, '../../stamped');
 const srcPath = process.env.SRC || path.resolve(__dirname, '../../src');
-const iepEntry = path.resolve(__dirname, '../app/index.js');
+const entry = path.resolve(__dirname, '../app/index.js');
 const modPath = path.resolve(__dirname, '../../node_modules');
 
 const { stamp, resolve } = ticketStamp({
   stampDir,
-  iepEntry,
+  entry,
   proxy: {
     changeOrigin: true,
     headers: {

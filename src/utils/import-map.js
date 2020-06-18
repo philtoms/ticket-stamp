@@ -12,7 +12,3 @@ export default (name, hashName, map = defaultMap) => {
   };
   return map;
 };
-
-export const goLive = (map) => {
-  defaultMap = map;
-};
