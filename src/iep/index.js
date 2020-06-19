@@ -11,6 +11,7 @@ import load, { bind } from './middleware';
 import { serviceMap } from '../utils/stamp';
 
 const stamp = express();
+let _workerId = 0;
 
 export default ({ stampDir, entry, inject, plugins, cache = localCache }) => {
   const { iepMap } = cache;
@@ -26,9 +27,10 @@ export default ({ stampDir, entry, inject, plugins, cache = localCache }) => {
   const render = (entry, inject) => (iep, body) => {
     return new Promise((resolve) => {
       const { worker } = serviceMap[iep.ticket];
-      worker.send({ iep, entry, body });
-      worker.on('message', ({ buffer }) => {
-        if (buffer) resolve(inject(buffer));
+      const requestId = _workerId++;
+      worker.send({ iep, entry, body, workerId });
+      worker.on('message', ({ responseId, buffer }) => {
+        if (buffer && requestId === responseId) resolve(inject(buffer));
       });
     });
   };
