@@ -15,13 +15,11 @@ export default (config) => {
   const srcPath = process.env.SRC || path.resolve(__dirname, '../../src');
   const modPath = path.resolve(__dirname, '../../node_modules');
 
-  const { stamp, resolve } = ticketStamp({
-    inject,
-    ...config,
-  });
+  const { stamp, resolve } = ticketStamp(config);
 
   app.use(compression());
   app.use(stamp);
+  app.use(inject);
   app.use('/stamped', express.static(config.stampDir));
   app.use(['/src/*', '/static/*'], resolve(srcPath));
   app.use('/node_modules', express.static(modPath));

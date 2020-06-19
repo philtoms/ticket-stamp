@@ -13,7 +13,7 @@ import { getService } from '../utils/stamp';
 const stamp = express();
 let _workerId = 0;
 
-export default ({ stampDir, entry, inject, plugins, cache }) => {
+export default ({ stampDir, entry, plugins, cache }) => {
   if (!cache)
     cache = localCache({
       entity: 'iepMap',
@@ -31,13 +31,13 @@ export default ({ stampDir, entry, inject, plugins, cache }) => {
     return (await iepMap.get('prod'))[0];
   };
 
-  const render = (entry, inject) => (iep, body) => {
+  const render = (entry) => (iep, body) => {
     return new Promise((resolve) => {
       const { worker } = getService(iep.ticket);
       const requestId = _workerId++;
       worker.send({ iep, entry, body, requestId });
       worker.on('message', ({ responseId, buffer }) => {
-        if (buffer && requestId === responseId) resolve(inject(buffer));
+        if (buffer && requestId === responseId) resolve(buffer);
       });
     });
   };
@@ -80,7 +80,7 @@ export default ({ stampDir, entry, inject, plugins, cache }) => {
   );
   stamp.post('/stamp', bind(pipeline.register || ['register'], iepMap));
 
-  const renderOnEntry = render(entry, inject || ((buffer) => buffer));
+  const renderOnEntry = render(entry);
 
   load(stamp, middleware, { iepMap }).then(() => {
     if (proxy) {

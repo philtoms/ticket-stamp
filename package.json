@@ -20,8 +20,8 @@
     "express": "^4.17.1",
     "express-fileupload": "^1.1.7-alpha.3",
     "form-data": "^3.0.0",
-    "http-proxy-middleware": "^1.0.3",
     "node-fetch": "^2.6.0",
+    "node-http-proxy": "^0.2.3",
     "urlencode": "^1.1.0"
   },
   "devDependencies": {
