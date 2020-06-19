@@ -72,8 +72,8 @@ export const revert = (verbose) => {
 
 export const close = (verbose) => {
   return fetch(
-    'revert',
-    `${iepServer}/${ticketId}/revert`,
+    'remove',
+    `${iepServer}/${ticketId}/remove`,
     'PUT',
     null,
     verbose

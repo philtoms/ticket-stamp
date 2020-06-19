@@ -96,4 +96,4 @@ The ticket resources are closed but not removed from the workflow system. The ti
 - Policy plugin - move all of the promote decisions out of IEP
 - Authentication plugin - Integrate Github, Atlassian, etc single sign on
 - Promotion plugin - orchestrate promotion through customized build steps.
-- Hook plugin - Github, Jira, Slack, whatever
+- Hook plugin - Github, ~Jira~, Slack, whatever
