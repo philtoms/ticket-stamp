@@ -5,7 +5,12 @@ import path, { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export const serviceMap = {};
+const serviceMap = {};
+
+export const getService = (ticket) => {
+  if (!serviceMap[ticket]) restartWorker(ticket);
+  return serviceMap[ticket];
+};
 
 export default (data, restartRequired = false) => {
   if (restartRequired && data.stage === 'dev')

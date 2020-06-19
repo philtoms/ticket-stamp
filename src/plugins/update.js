@@ -13,7 +13,7 @@ export default (iepMap, stampDir) => async (req, res) => {
       if (iep.stage !== 'dev') {
         return res
           .status(401)
-          .send(`ticket ${ticket} is already at ${iepMap[ticket].stage} stage`);
+          .send(`ticket ${ticket} is already at ${iep.stage} stage`);
       }
       const iepName = `${name}.${md5}.${type}`;
       const iepPath = `${stampDir}/${iepName}`;

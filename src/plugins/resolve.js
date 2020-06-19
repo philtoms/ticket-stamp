@@ -1,10 +1,7 @@
 import fs from 'fs';
+import { getService } from '../utils/stamp';
 
-export default (iepMap, serviceMap, resolve) => (srcPath) => async (
-  req,
-  res,
-  next
-) => {
+export default (iepMap, resolve) => (srcPath) => async (req, res, next) => {
   try {
     const path = `${srcPath}/${req.params[0]}`;
     if (!fs.existsSync(path)) {
@@ -12,15 +9,16 @@ export default (iepMap, serviceMap, resolve) => (srcPath) => async (
       return next();
     }
     const [stage = 'prod', ticket] = (req.cookies.stamp || '').split('=');
-    const src = serviceMap[ticket][path] || fs.readFileSync(path, 'utf8');
+    const service = getService(ticket);
+    const src = service[path] || fs.readFileSync(path, 'utf8');
     const iep = (await iepMap.get(ticket)) ||
       (await iepMap.get(prod)[0]) || { map: {} };
 
     res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
 
-    if (!serviceMap[path] && iep && iep.stage === stage) {
+    if (!service[path] && iep && iep.stage === stage) {
       resolve(src, path, iep.map).then((src) => {
-        serviceMap[ticket][path] = src;
+        service[path] = src;
         res.send(src);
       });
     } else {
