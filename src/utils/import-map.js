@@ -1,13 +1,9 @@
-let defaultMap = {
-  imports: {},
-};
-
-export default (name, hashName, map = defaultMap) => {
+export default (map, name, hashName) => {
   map = {
     ...map,
     imports: {
       ...map.imports,
-      ...(hashName ? { [name]: `/stamped/${hashName}` } : {}),
+      ...(hashName ? { [name]: hashName } : {}),
     },
   };
   return map;

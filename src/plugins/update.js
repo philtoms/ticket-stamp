@@ -16,14 +16,15 @@ export default (iepMap, stampDir) => async (req, res) => {
           .send(`ticket ${ticket} is already at ${iepMap[ticket].stage} stage`);
       }
       const iepName = `${name}.${md5}.${type}`;
-      fs.writeFileSync(`${stampDir}/${iepName}`, data);
+      const iepPath = `${stampDir}/${iepName}`;
+      fs.writeFileSync(iepPath, data);
       // Will probably split into SSR and CSR imports
       const alias = type === 'js' ? name : `${name}.${type}`;
 
       const stamped = stamp(
         {
           ...iep,
-          map: ImportMap(alias, iepName, iep.map),
+          map: ImportMap(iep.map, alias, iepPath),
           status: 'updated',
           files: [...(iep.files || []).filter((file) => file !== alias), alias],
         },

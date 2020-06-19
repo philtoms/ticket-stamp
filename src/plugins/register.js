@@ -30,7 +30,7 @@ export default (iepMap) => async (req, res) => {
         stage: 'dev',
         status: 'registered',
         base,
-        map: ImportMap(ticket, null, (prod[0] || {}).map),
+        map: ImportMap((prod[0] || {}).map, ticket),
         cache: {},
       });
     iepMap.set(ticket, stamped);
