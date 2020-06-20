@@ -1,12 +1,11 @@
 import { fork } from 'child_process';
 import { fileURLToPath } from 'url';
 import path, { dirname } from 'path';
-import cache from './localCache';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const serviceMap = cache('service');
+const serviceMap = {};
 
 export const getService = (ticket) => {
   if (!serviceMap[ticket]) restartWorker(ticket);
@@ -29,6 +28,17 @@ const restartWorker = (ticket) => {
     delete serviceMap[ticket];
   }
   serviceMap[ticket] = {
-    worker: fork(path.resolve(__dirname, 'worker.js')),
+    // worker: fork(path.resolve(__dirname, 'worker.js')),
+    worker: {
+      send: ({ ticket, entry, body, requestId }) => {
+        import(`${entry}?__iep=${ticket}`).then((app) =>
+          serviceMap[ticket].worker.send({
+            responseId: requestId,
+            buffer: (app.default || app)(body),
+          })
+        );
+      },
+      on: (_, cb) => (serviceMap[ticket].worker.send = cb),
+    },
   };
 };

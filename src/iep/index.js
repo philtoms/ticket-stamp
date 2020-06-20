@@ -6,7 +6,6 @@ import fileupload from 'express-fileupload';
 import proxyMW from '../plugins/proxy';
 import resolveMW from '../plugins/resolve';
 import resolver from './resolver';
-import localCache from '../utils/localCache';
 import load, { bind } from './middleware';
 import { getService } from '../utils/stamp';
 
@@ -14,14 +13,11 @@ const stamp = express();
 let _workerId = 0;
 
 export default ({ stampDir, entry, plugins, cache }) => {
-  if (!cache)
-    cache = localCache({
-      entity: 'iepMap',
-      defaults: { prod: '[]' },
-      persistDir: stampDir,
-    });
-
-  const { iepMap } = cache;
+  const iepMap = cache('iepMap', {
+    defaults: { prod: '[]' },
+    persistRoot: stampDir,
+    checkForUpdates: true,
+  });
 
   // export a ticketed map to the application. Use prod until the ticket
   // is ready
@@ -35,9 +31,9 @@ export default ({ stampDir, entry, plugins, cache }) => {
     return new Promise((resolve) => {
       const { worker } = getService(iep.ticket);
       const requestId = _workerId++;
-      worker.send({ iep, entry, body, requestId });
+      worker.send({ ticket: iep.ticket, entry, body, requestId });
       worker.on('message', ({ responseId, buffer }) => {
-        if (buffer && requestId === responseId) resolve(buffer);
+        if (requestId === responseId) resolve(buffer);
       });
     });
   };
@@ -92,6 +88,6 @@ export default ({ stampDir, entry, plugins, cache }) => {
     validTicket,
     stamp,
     render: renderOnEntry,
-    resolve: resolveMW(iepMap, resolver),
+    resolve: resolveMW(cache, resolver, stampDir),
   };
 };

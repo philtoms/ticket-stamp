@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'url';
 import path, { dirname } from 'path';
+import cache from '../../src/utils/local-cache';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -10,6 +11,7 @@ const entry = path.resolve(__dirname, 'src/app/index.js');
 export default {
   stampDir,
   entry,
+  cache,
   plugins: {
     proxy: {
       changeOrigin: true,
