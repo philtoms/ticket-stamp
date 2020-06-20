@@ -27,6 +27,7 @@ export default (options, validate, render) => {
             render(iep, body).then((buffer) => {
               req.stamp.buffer = buffer;
               res.end = _end;
+              if (options.inject) return res.end(options.inject(buffer));
               next();
             });
           } catch (err) {
