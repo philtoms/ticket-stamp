@@ -2,9 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import log from './log';
 
-const cache = {};
+// isolate private cache
+const __CACHE = Symbol('local-cache');
 
-export default ({ entity, defaults = {}, persistDir }) => {
+globalThis[__CACHE] = globalThis[__CACHE] || {};
+const cache = globalThis[__CACHE];
+
+export default ({ entity, defaults = {}, persistDir = '' }) => {
   const persistPath = path.resolve(persistDir, `${entity}.json`);
 
   const persist = () =>

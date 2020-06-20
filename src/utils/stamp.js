@@ -1,11 +1,12 @@
 import { fork } from 'child_process';
 import { fileURLToPath } from 'url';
 import path, { dirname } from 'path';
+import cache from './localCache';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const serviceMap = {};
+const serviceMap = cache('service');
 
 export const getService = (ticket) => {
   if (!serviceMap[ticket]) restartWorker(ticket);
