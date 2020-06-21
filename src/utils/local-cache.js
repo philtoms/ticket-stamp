@@ -78,14 +78,7 @@ export default (
 
   return {
     get: maybeFrom((key) => Promise.resolve(cache[entity][key] || false)),
-    getAll: maybeFrom(() =>
-      Promise.resolve(
-        Object.entries(cache[entity]).map(([key, value]) => [
-          key,
-          JSON.parse(value),
-        ])
-      )
-    ),
+    getAll: maybeFrom(() => Promise.resolve(Object.entries(cache[entity]))),
     set: (key, value) =>
       Promise.resolve((cache[entity][key] = value)).then(() => persist(key)),
     remove: (ticket) => {

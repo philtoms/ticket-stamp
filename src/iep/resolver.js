@@ -2,6 +2,7 @@ import { init, parse } from 'es-module-lexer/dist/lexer';
 
 import fs from 'fs';
 import path from 'path';
+import log from '../utils/log';
 
 const fsPath = (pathname, root) => {
   if (pathname.startsWith('/')) pathname = pathname.substr(1);
@@ -63,7 +64,7 @@ export default async (source, pathname, map, baseDir = srcDir) => {
               fs.accessSync(file, fs.F_OK);
               // selector = file;
             } catch (err) {
-              selector = console.error('no access!');
+              selector = log.error('no access!');
             }
           }
         }

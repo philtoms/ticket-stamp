@@ -37,7 +37,7 @@ export default (iepMap) => async (req, res) => {
 
     res.status(404).send(`unrecognized ticket ${ticket}`);
   } catch (err) {
-    console.error(err);
+    log.error(err);
     res.status(500).send('Server error');
   }
 };

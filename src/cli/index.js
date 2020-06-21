@@ -1,3 +1,4 @@
+import log from '../utils/log';
 import options, { optionDefinitions } from './options';
 import usage from './usage';
 import { register, update, list, promote, revert, close } from './api';
@@ -24,5 +25,5 @@ import { register, update, list, promote, revert, close } from './api';
 })();
 
 if (options.help || Object.keys(options).length === 0) {
-  console.log(usage(optionDefinitions));
+  log(usage(optionDefinitions));
 }

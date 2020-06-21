@@ -13,7 +13,7 @@ export default (iepMap) => async (req, res) => {
     iepMap.set('prod', prod);
     return res.send(log('removed', ticket));
   } catch (err) {
-    console.error(err);
+    log.error(err);
     res.status(500).send('Server error');
   }
 };

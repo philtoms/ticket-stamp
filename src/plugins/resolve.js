@@ -1,4 +1,5 @@
 import fs from 'fs';
+import log from '../utils/log';
 
 const root = process.env.PWD;
 
@@ -19,7 +20,7 @@ export default (cache, resolve, persistRoot) => (srcPath) => async (
     const path = `${srcPath}/${req.params[0]}`;
     const cacheKey = `${ticket}.${path.replace(root, '').replace(/\//g, '_')}`;
     if (!fs.existsSync(path)) {
-      console.error(`NOT FOUND: ${req.params[0]}`);
+      log.error(`NOT FOUND: ${req.params[0]}`);
       return next();
     }
     let src = await srcMap.get(cacheKey);
@@ -35,7 +36,7 @@ export default (cache, resolve, persistRoot) => (srcPath) => async (
     res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
     res.send(src);
   } catch (err) {
-    console.error(err);
+    log.error(err);
     res.status(500).send('Server error');
   }
 };

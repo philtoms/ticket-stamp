@@ -1,3 +1,5 @@
+import log from '../utils/log';
+
 export default (iepMap) => async (req, res) => {
   try {
     const { stage } = req.query;
@@ -14,7 +16,7 @@ export default (iepMap) => async (req, res) => {
         )
     );
   } catch (err) {
-    console.error(err);
+    log.error(err);
     res.status(500).send('Server error');
   }
 };

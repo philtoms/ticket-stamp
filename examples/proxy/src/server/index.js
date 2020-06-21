@@ -5,6 +5,7 @@ import compression from 'compression';
 
 import inject from './inject';
 import ticketStamp from '../../../../src/iep';
+import log from '../../../../src/utils/log';
 
 export default (config) => {
   const __filename = fileURLToPath(import.meta.url);
@@ -25,6 +26,6 @@ export default (config) => {
   app.use('/node_modules', express.static(modPath));
 
   const listener = app.listen(process.env.PORT || 8080, () => {
-    console.log('Your app is listening on port ' + listener.address().port);
+    log('Your app is listening on port ' + listener.address().port);
   });
 };

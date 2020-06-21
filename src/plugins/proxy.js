@@ -1,4 +1,5 @@
 import httpProxy from 'http-proxy';
+import log from '../utils/log';
 
 export default (options, validate, render) => {
   const proxy = httpProxy.createProxyServer(options);
@@ -31,7 +32,7 @@ export default (options, validate, render) => {
               next();
             });
           } catch (err) {
-            console.error(err);
+            log.error(err);
           }
         }
       };

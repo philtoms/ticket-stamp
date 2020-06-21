@@ -19,23 +19,24 @@ export default (iepMap) => async (req, res) => {
     // don't overwrite existing ticket work
     // - use update to do that
     if (prodTicket) {
-      return res.status(200).send(prodTicket);
+      return res.status(202).send(`unchanged ticket ${ticket}`);
     }
     const iep = await iepMap.get(ticket);
-    const stamped =
-      iep ||
-      stamp({
-        user,
-        ticket,
-        stage: 'dev',
-        status: 'registered',
-        base,
-        map: ImportMap((prod[0] || {}).map || { imports: {} }, ticket),
-      });
+    if (iep) {
+      return res.status(202).send(`unchanged ticket ${ticket}`);
+    }
+    const stamped = stamp({
+      user,
+      ticket,
+      stage: 'dev',
+      status: 'registered',
+      base,
+      map: ImportMap((prod[0] || {}).map || { imports: {} }, ticket),
+    });
     iepMap.set(ticket, stamped);
-    return res.status(iep ? 200 : 201).send(log('register', stamped));
+    return res.status(201).send(log('register', stamped));
   } catch (err) {
-    console.error(err);
+    log.error(err);
     res.status(500).send('Server error');
   }
 };
