@@ -2,17 +2,27 @@
 //    This hook may disappear or its signature may change.
 //    Do not rely on the API described below.
 // https://nodejs.org/api/esm.html#esm_code_resolve_code_hook
-
+import path from 'path';
 import resolver from './resolver';
-import config from '../../examples/proxy/ts-config';
 
-const __iepMap = config.cache('iepMap', {
+const preload = (entity, opts) => {
+  const cache = import(path.resolve(process.env.PWD, 'ts-config.js')).then(
+    (module) => {
+      const config = module.default;
+      return config.cache(entity, { ...opts, persistRoot: config.stampDir });
+    }
+  );
+  return {
+    get: async (...args) => (await cache).get(...args),
+    set: async (...args) => (await cache).set(...args),
+  };
+};
+
+const __iepMap = preload('iepMap', {
   defaults: { prod: '[]' },
-  persistRoot: config.stampDir,
 });
 
-const __srcMap = config.cache('srcMap', {
-  persistRoot: config.stampDir,
+const __srcMap = preload('srcMap', {
   persistKey: true,
 });
 
