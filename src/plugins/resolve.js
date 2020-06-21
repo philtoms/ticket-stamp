@@ -1,5 +1,7 @@
 import fs from 'fs';
 
+const root = process.env.PWD;
+
 export default (cache, resolve, persistRoot) => (srcPath) => async (
   req,
   res,
@@ -15,7 +17,7 @@ export default (cache, resolve, persistRoot) => (srcPath) => async (
   try {
     const [, ticket] = (req.cookies.stamp || '').split('=');
     const path = `${srcPath}/${req.params[0]}`;
-    const cacheKey = `${ticket}.${path.replace(/\//g, '_')}`;
+    const cacheKey = `${ticket}.${path.replace(root, '').replace(/\//g, '_')}`;
     if (!fs.existsSync(path)) {
       console.error(`NOT FOUND: ${req.params[0]}`);
       return next();

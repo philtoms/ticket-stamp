@@ -5,13 +5,12 @@
 import path from 'path';
 import resolver from './resolver';
 
+const root = process.env.PWD;
 const preload = (entity, opts) => {
-  const cache = import(path.resolve(process.env.PWD, 'ts-config.js')).then(
-    (module) => {
-      const config = module.default;
-      return config.cache(entity, { ...opts, persistRoot: config.stampDir });
-    }
-  );
+  const cache = import(path.resolve(root, 'ts-config.js')).then((module) => {
+    const config = module.default;
+    return config.cache(entity, { ...opts, persistRoot: config.stampDir });
+  });
   return {
     get: async (...args) => (await cache).get(...args),
     set: async (...args) => (await cache).set(...args),
@@ -66,7 +65,9 @@ export async function getSource(url, context, defaultGetSource) {
   if (url.includes('__iep=')) {
     const [pathname, ticket] = extractIEP(url);
 
-    __urlMap[url] = `${ticket}.${pathname.replace(/\//g, '_')}`;
+    __urlMap[url] = `${ticket}.${pathname
+      .replace(root, '')
+      .replace(/\//g, '_')}`;
 
     const source = await __srcMap.get(__urlMap[url]);
     if (source) {
