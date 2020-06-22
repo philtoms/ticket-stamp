@@ -29,49 +29,47 @@ export default async (source, pathname, map, baseDir = srcDir) => {
   const root = path.parse(pathname).dir;
   return imports.reverse().reduce((acc, { s, e, d }) => {
     if (d !== -1) return acc;
-    let selector = acc.substring(s, e);
-    const mappedSelector = selector
-      .replace('../', '')
-      .replace('./', '')
-      .replace('.js', '');
-    if (map.imports[mappedSelector]) {
-      selector = mappedSelector;
+    let specifier = acc.substring(s, e);
+    const selector = specifier.replace('/index.js', '').split('/').pop();
+    const mappedSelector = map.imports[specifier] || map.imports[selector];
+    if (mappedSelector) {
+      specifier = mappedSelector;
     } else {
-      if (selector.startsWith('.') || selector.startsWith('/')) {
-        selector =
-          selector === '.' || selector === './'
+      if (specifier.startsWith('.') || specifier.startsWith('/')) {
+        specifier =
+          specifier === '.' || specifier === './'
             ? './index.js'
-            : `${selector}${
-                ['js', 'css', 'json'].includes(selector.split('.').pop())
+            : `${specifier}${
+                ['js', 'css', 'json'].includes(specifier.split('.').pop())
                   ? ''
                   : '.js'
               }`;
         try {
           const [file] = fsPath(
-            selector,
-            selector.startsWith('/') ? baseDir : root
+            specifier,
+            specifier.startsWith('/') ? baseDir : root
           );
           fs.accessSync(file, fs.F_OK);
-          // selector = file;
+          // specifier = file;
         } catch (err) {
-          if (selector.endsWith('.js')) {
-            selector = selector.replace('.js', '/index.js');
+          if (specifier.endsWith('.js')) {
+            specifier = specifier.replace('.js', '/index.js');
             try {
               const [file] = fsPath(
-                selector,
-                selector.startsWith('/') ? baseDir : root
+                specifier,
+                specifier.startsWith('/') ? baseDir : root
               );
               fs.accessSync(file, fs.F_OK);
-              // selector = file;
+              // specifier = file;
             } catch (err) {
-              selector = log.error('no access!');
+              specifier = log.error('resolver', 'no access!');
             }
           }
         }
       } else {
-        selector = resolvePackage(selector);
+        specifier = resolvePackage(specifier);
       }
     }
-    return selector ? acc.substr(0, s) + selector + acc.substr(e) : acc;
+    return specifier ? acc.substr(0, s) + specifier + acc.substr(e) : acc;
   }, source);
 };

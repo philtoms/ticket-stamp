@@ -3,6 +3,8 @@ import ImportMap from '../utils/import-map';
 import log from '../utils/log';
 import stamp from '../utils/stamp';
 
+const root = process.env.PWD;
+
 export default (iepMap, stampDir) => async (req, res) => {
   try {
     const { ticket } = req.params;
@@ -15,8 +17,8 @@ export default (iepMap, stampDir) => async (req, res) => {
           .status(401)
           .send(`ticket ${ticket} is already at ${iep.stage} stage`);
       }
-      const iepName = `${name}.${md5}.${type}`;
-      const iepPath = `${stampDir}/${iepName}`;
+      const iepName = `/${stampDir}/${name}.${md5}.${type}`;
+      const iepPath = `${root}${iepName}`;
       fs.writeFileSync(iepPath, data);
       // Will probably split into SSR and CSR imports
       const alias = type === 'js' ? name : `${name}.${type}`;
@@ -24,7 +26,7 @@ export default (iepMap, stampDir) => async (req, res) => {
       const stamped = stamp(
         {
           ...iep,
-          map: ImportMap(iep.map, alias, iepPath),
+          map: ImportMap(iep.map, alias, iepName),
           status: 'updated',
           files: [...(iep.files || []).filter((file) => file !== alias), alias],
         },

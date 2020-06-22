@@ -6,26 +6,32 @@ import path from 'path';
 import resolver from './resolver';
 
 const root = process.env.PWD;
-const preload = (entity, opts) => {
-  const cache = import(path.resolve(root, 'ts-config.js')).then((module) => {
-    const config = module.default;
-    return config.cache(entity, { ...opts, persistRoot: config.stampDir });
-  });
+const configPath = path.resolve(root, 'ts-config.js');
+
+// lazy load the config after the pre-loader cycle has completed.
+// Otherwise the dynamic import will force create a new singleton
+const lazyLoad = (entity, opts) => {
+  let cached;
+  const cache = () =>
+    cached ||
+    (cached = import(configPath).then((module) => {
+      const config = module.default;
+      return config.cache(entity, {
+        ...opts,
+        ...(opts.persistKey ? {} : { persistRoot: config.stampDir }),
+      });
+    }));
+
   return {
-    get: async (...args) => (await cache).get(...args),
-    set: async (...args) => (await cache).set(...args),
+    get: async (...args) => (await cache()).get(...args),
+    set: async (...args) => (await cache()).set(...args),
   };
 };
 
-const __iepMap = preload('iepMap', {
-  defaults: { prod: '[]' },
-});
-
-const __srcMap = preload('srcMap', {
+const __iepMap = lazyLoad('iepMap', {});
+const __srcMap = lazyLoad('srcMap', {
   persistKey: true,
 });
-
-const __urlMap = {};
 
 const extractIEP = (specifier, protocol = '') => {
   const { pathname, searchParams } = new URL(protocol + specifier);
@@ -41,42 +47,31 @@ export async function resolve(specifier, context, defaultResolve) {
     [, ticket] = extractIEP(context.parentURL);
   }
 
+  // fill in missing root for import-mapped specifiers of the form '/relative/path'
+  if (ticket && specifier.startsWith('/') && !specifier.startsWith(root)) {
+    specifier = path.resolve(root, specifier.substr(1));
+  }
+
   const { url } = defaultResolve(specifier, context, defaultResolve);
 
-  if (ticket) {
-    return { url: `${url}?__iep=${ticket}` };
-  }
-  return {
-    url,
-  };
-}
-
-export async function getFormat(url, context, defaultGetFormat) {
-  if (url.includes('__iep=')) {
-    return {
-      format: 'module',
-    };
-  }
-  // Defer to Node.js for all other URLs.
-  return defaultGetFormat(url, context, defaultGetFormat);
+  // propagate ticket state through the tree
+  return { url: ticket ? `${url}?__iep=${ticket}` : url };
 }
 
 export async function getSource(url, context, defaultGetSource) {
   if (url.includes('__iep=')) {
     const [pathname, ticket] = extractIEP(url);
+    const cacheKey = `${ticket}${pathname}`;
 
-    __urlMap[url] = `${ticket}.${pathname
-      .replace(root, '')
-      .replace(/\//g, '_')}`;
-
-    const source = await __srcMap.get(__urlMap[url]);
-    if (source) {
+    const iep = await __iepMap.get(ticket);
+    const { timestamp, source } = await __srcMap.get(cacheKey, iep);
+    if (timestamp > iep.timestamp) {
       return {
         source,
       };
     }
 
-    const src = (await __iepMap.get(ticket)).map.imports[pathname];
+    const src = iep.map.imports[pathname];
     if (src) {
       url = 'file:///' + src;
     }
@@ -87,16 +82,20 @@ export async function getSource(url, context, defaultGetSource) {
 
 export async function transformSource(source, context, defaultTransformSource) {
   const { url } = context;
-  if (await __srcMap.get(__urlMap[url])) {
-    return {
-      source,
-    };
-  }
   if (url.includes('__iep=')) {
     const [pathname, ticket] = extractIEP(url);
-    const map = (await __iepMap.get(ticket)).map;
-    source = await resolver(source, pathname, map);
-    __srcMap.set(__urlMap[url], source);
+    const iep = await __iepMap.get(ticket);
+    const cacheKey = `${ticket}.${pathname}`;
+    const { timestamp } = await __srcMap.get(cacheKey);
+    if (timestamp > iep.timestamp) {
+      return {
+        source,
+      };
+    }
+
+    source = await resolver(source, pathname, iep.map);
+    __srcMap.set(cacheKey, { source });
+
     return {
       source,
     };

@@ -6,10 +6,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const serviceMap = {};
+let workerId = 0;
 
 export const getService = (ticket) => {
   if (!serviceMap[ticket]) restartWorker(ticket);
-  return serviceMap[ticket];
+  return { ...serviceMap[ticket], requestId: workerId++ };
 };
 
 export default (data, restartRequired = false) => {
@@ -18,7 +19,6 @@ export default (data, restartRequired = false) => {
   return {
     user: process.env.USER,
     ...data,
-    timestamp: Date().toString(),
   };
 };
 
@@ -28,17 +28,17 @@ const restartWorker = (ticket) => {
     delete serviceMap[ticket];
   }
   serviceMap[ticket] = {
-    // worker: fork(path.resolve(__dirname, 'worker.js')),
-    worker: {
-      send: ({ ticket, entry, body, requestId }) => {
-        import(`${entry}?__iep=${ticket}`).then((app) =>
-          serviceMap[ticket].worker.send({
-            responseId: requestId,
-            buffer: (app.default || app)(body),
-          })
-        );
-      },
-      on: (_, cb) => (serviceMap[ticket].worker.send = cb),
-    },
+    worker: fork(path.resolve(__dirname, 'worker.js')),
+    // worker: {
+    //   send: ({ ticket, entry, body, requestId }) => {
+    //     import(`${entry}?__iep=${ticket}`).then((module) => {
+    //       serviceMap[ticket].worker.return({
+    //         responseId: requestId,
+    //         buffer: (module.default || module)(body),
+    //       });
+    //     });
+    //   },
+    //   on: (_, cb) => (serviceMap[ticket].worker.return = cb),
+    // },
   };
 };

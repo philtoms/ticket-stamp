@@ -10,13 +10,12 @@ import load, { bind } from './middleware';
 import { getService } from '../utils/stamp';
 
 const stamp = express();
-let _workerId = 0;
+const root = process.env.PWD;
 
 export default ({ stampDir, entry, plugins, cache }) => {
   const iepMap = cache('iepMap', {
-    defaults: { prod: '[]' },
-    persistRoot: stampDir,
-    checkForUpdates: true,
+    defaults: { prod: [] },
+    persistRoot: `${root}/${stampDir}`,
   });
 
   // export a ticketed map to the application. Use prod until the ticket
@@ -29,8 +28,7 @@ export default ({ stampDir, entry, plugins, cache }) => {
 
   const render = (entry) => (iep, body) => {
     return new Promise((resolve) => {
-      const { worker } = getService(iep.ticket);
-      const requestId = _workerId++;
+      const { worker, requestId } = getService(iep.ticket);
       worker.send({ ticket: iep.ticket, entry, body, requestId });
       worker.on('message', ({ responseId, buffer }) => {
         if (requestId === responseId) resolve(buffer);

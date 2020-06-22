@@ -5,67 +5,53 @@ import log from './log';
 // isolate private cache
 const __CACHE = Symbol('local-cache');
 
-globalThis[__CACHE] = globalThis[__CACHE] || { mtime: {} };
+globalThis[__CACHE] = globalThis[__CACHE] || {};
 const cache = globalThis[__CACHE];
 
 export default (
   entity,
-  {
-    defaults = {},
-    persistRoot = '',
-    persistKey = false,
-    checkForUpdates = false,
-  } = {}
+  { defaults = {}, persistRoot = '', persistKey = false } = {}
 ) => {
-  // modes:
-  //  persistRoot only - save entity as json
-  //  persistKey - save entity[key]
-  const persist = (key) => {
-    if (persistRoot) {
-      const persistPath = path.resolve(
-        persistRoot,
-        `${entity}.${persistKey ? key : 'json'}`
-      );
+  const persistPath = (key) =>
+    path.resolve(persistRoot, `${entity}.${persistKey ? key : 'json'}`);
 
-      const data = persistKey
-        ? cache[entity][key]
-        : JSON.stringify(cache[entity]);
-      fs.writeFile(persistPath, data, (err) => {
+  const persist = (key) => {
+    const path = persistPath();
+    if (persistRoot) {
+      fs.writeFile(path, JSON.stringify(cache[entity]), (err) => {
         if (err) {
-          log('localCache', err);
+          return log('localCache', err);
+        }
+        if (key) {
+          const { mtime } = fs.statSync(path);
+          cache[entity][key].timestamp = mtime.getTime();
         }
       });
     }
+    if (key) cache[entity][key].timestamp = Date.now();
   };
 
-  const load = (key) => {
-    const persistPath = path.resolve(
-      persistRoot,
-      `${entity}.${persistKey ? key : 'json'}`
-    );
-
-    if (fs.existsSync(persistPath)) {
-      const data = fs.readFileSync(persistPath, 'utf8');
-      if (persistKey) cache[entity][key] = data;
-      else cache[entity] = JSON.parse(data);
-    } else if (!persistKey) {
+  const load = (key, timestamp) => {
+    const path = persistPath();
+    if (fs.existsSync(path)) {
+      const data = fs.readFileSync(path, 'utf8');
+      cache[entity] = JSON.parse(data);
+      if (cache[entity][key])
+        cache[entity][key].timestamp = timestamp || Date.now();
+    } else {
       cache[entity] = defaults;
       persist();
     }
   };
 
   const maybeFrom = (fn) => (key) => {
-    if (checkForUpdates || (persistKey && !cache[entity][key])) {
-      const persistPath = path.resolve(
-        persistRoot,
-        `${entity}.${persistKey ? key : 'json'}`
-      );
-      if (fs.existsSync(persistPath)) {
-        const { mtime } = fs.statSync(persistPath);
-        if (mtime.getTime() !== cache.mtime[persistPath]) {
-          cache.mtime[persistPath] = mtime.getTime();
-          load(key);
-        }
+    if (persistRoot && key) {
+      const path = persistPath(key);
+      const { mtime } = fs.statSync(path);
+      const timestamp = mtime.getTime();
+      if (cache[entity][key] && timestamp > cache[entity][key].timestamp) {
+        load(key, timestamp);
+        console.log('cache busted');
       }
     }
     return fn(key);
@@ -73,17 +59,17 @@ export default (
 
   if (!cache[entity]) {
     cache[entity] = defaults;
-    if (persistRoot && !persistKey) load();
+    if (persistRoot) load();
   }
 
   return {
     get: maybeFrom((key) => Promise.resolve(cache[entity][key] || false)),
-    getAll: maybeFrom(() => Promise.resolve(Object.entries(cache[entity]))),
+    getAll: Promise.resolve(Object.entries(cache[entity])),
     set: (key, value) =>
       Promise.resolve((cache[entity][key] = value)).then(() => persist(key)),
-    remove: (ticket) => {
-      delete cache[entity][ticket];
-      return Promise.resolve().then(persist);
+    remove: (key) => {
+      delete cache[entity][key];
+      return Promise.resolve().then(() => persist(key));
     },
   };
 };

@@ -5,11 +5,10 @@ import cache from '../../src/utils/local-cache';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const stampDir = path.resolve(__dirname, 'stamped');
 const entry = path.resolve(__dirname, 'src/app/index.js');
 
 export default {
-  stampDir,
+  stampDir: 'stamped',
   entry,
   cache,
   plugins: {

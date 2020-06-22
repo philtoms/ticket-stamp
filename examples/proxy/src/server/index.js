@@ -13,17 +13,18 @@ export default (config) => {
 
   const app = express();
 
+  const stampedPath = path.resolve(__dirname, '../../stamped');
   const srcPath = process.env.SRC || path.resolve(__dirname, '../../src');
   const modPath = path.resolve(__dirname, '../../node_modules');
 
   const { stamp, resolve } = ticketStamp(config);
 
   app.use(compression());
+  app.use('/stamped', express.static(stampedPath));
+  app.use('/node_modules', express.static(modPath));
   app.use(stamp);
   app.use(inject);
-  app.use('/stamped', express.static(config.stampDir));
-  app.use(['/src/*', '/static/*'], resolve(srcPath));
-  app.use('/node_modules', express.static(modPath));
+  app.use('/src/*', resolve(srcPath));
 
   const listener = app.listen(process.env.PORT || 8080, () => {
     log('Your app is listening on port ' + listener.address().port);
