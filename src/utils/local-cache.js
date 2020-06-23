@@ -22,13 +22,13 @@ export default (
         if (err) {
           return log('localCache', err);
         }
-        if (key) {
+        if (key && cache[entity][key]) {
           const { mtime } = fs.statSync(path);
           cache[entity][key].timestamp = mtime.getTime();
         }
       });
     }
-    if (key) cache[entity][key].timestamp = Date.now();
+    if (key && cache[entity][key]) cache[entity][key].timestamp = Date.now();
   };
 
   const load = (key, timestamp) => {
@@ -51,7 +51,6 @@ export default (
       const timestamp = mtime.getTime();
       if (cache[entity][key] && timestamp > cache[entity][key].timestamp) {
         load(key, timestamp);
-        console.log('cache busted');
       }
     }
     return fn(key);
@@ -64,7 +63,7 @@ export default (
 
   return {
     get: maybeFrom((key) => Promise.resolve(cache[entity][key] || false)),
-    getAll: Promise.resolve(Object.entries(cache[entity])),
+    getAll: () => Promise.resolve(Object.entries(cache[entity])),
     set: (key, value) =>
       Promise.resolve((cache[entity][key] = value)).then(() => persist(key)),
     remove: (key) => {

@@ -8,31 +8,29 @@ export default (iepMap) => async (req, res) => {
       stamp: { user, stage },
     } = req;
 
-    let prod = (await iepMap.get('prod')) || [{}];
-    let iep = prod.find((entry) => entry.ticket === ticket);
-
-    if (iep) {
+    const prod = await iepMap.get('prod');
+    if (prod.find((entry) => entry.ticket === ticket)) {
       // when reverting from prod, ALWAYS revert from the head
       const stamped = stamp({
-        ...prod[0],
+        ...JSON.parse(JSON.stringify(prod[0])),
         user,
         ticket,
         stage: stage || 'qa',
         status: 'reverted',
       });
-      prod = prod.filter((entry) => entry.ticket !== ticket);
-      const prodTicket = prod[0] || { status: 'un-stamped' };
-      iepMap.set('prod', prod);
+      iepMap.set(
+        'prod',
+        prod.filter((entry) => entry.ticket !== ticket)
+      );
       iepMap.set(ticket, stamped);
       return res.send(
         log('revert', {
           [ticket]: stamped,
-          prod: prodTicket,
         })
       );
     }
 
-    iep = await iepMap.get(ticket);
+    const iep = await iepMap.get(ticket);
     if (iep) {
       const stamped = stamp({
         ...iep,
