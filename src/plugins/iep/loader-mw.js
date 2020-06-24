@@ -1,12 +1,12 @@
 import fs from 'fs';
-import log from '../utils/log';
+import resolve from './resolver';
 
-export default (cache, resolve) => (srcPath) => {
+export default (cache, srcPath, log) => {
   const iepMap = cache('iepMap');
   const srcMap = cache('srcMap', {
     persistKey: true,
   });
-  return async (req, res, next) => {
+  return async (req, res) => {
     try {
       const [, ticket] = (req.cookies.stamp || '').split('=');
       const path = `${srcPath}/${req.params[0]}`;

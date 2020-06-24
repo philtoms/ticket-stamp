@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import log from './log';
 
 // isolate private cache
 const __CACHE = Symbol('local-cache');
@@ -20,7 +19,7 @@ export default (
     if (persistRoot) {
       fs.writeFile(path, JSON.stringify(cache[entity]), (err) => {
         if (err) {
-          return log('localCache', err);
+          return console.error(err);
         }
         if (key && cache[entity][key]) {
           const { mtime } = fs.statSync(path);

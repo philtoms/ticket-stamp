@@ -4,6 +4,7 @@
 // https://nodejs.org/api/esm.html#esm_code_resolve_code_hook
 import path from 'path';
 import resolver from './resolver';
+import applyDefaults from './config-defaults';
 
 const root = process.env.PWD;
 const configPath = path.resolve(root, 'ts-config.js');
@@ -15,10 +16,15 @@ const lazyLoad = (entity, opts) => {
   const cache = () =>
     cached ||
     (cached = import(configPath).then((module) => {
-      const config = module.default;
+      const config = applyDefaults(module.default);
+      const {
+        rootPath,
+        routes: { stamped },
+      } = config;
+      const persistRoot = rootPath + stamped;
       return config.cache(entity, {
         ...opts,
-        ...(opts.persistKey ? {} : { persistRoot: config.stampDir }),
+        ...(opts.persistKey ? {} : { persistRoot }),
       });
     }));
 

@@ -1,5 +1,4 @@
 import stamp from '../utils/stamp';
-import log from '../utils/log';
 
 // promote a ticket through dev -> QA -> prod
 // considerations:
@@ -7,7 +6,7 @@ import log from '../utils/log';
 // - if the promotion is from QA to prod, the HEAD could be merged in to master
 // - git hooks can be integrated into the promotion checks to ensure that the
 //   build has completed cleanly.
-export default (iepMap) => async (req, res) => {
+export default ({ log }, iepMap) => async (req, res) => {
   try {
     const {
       params: { ticket },

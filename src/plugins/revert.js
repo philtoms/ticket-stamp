@@ -1,7 +1,6 @@
 import stamp from '../utils/stamp';
-import log from '../utils/log';
 
-export default (iepMap) => async (req, res) => {
+export default ({ log }, iepMap) => async (req, res) => {
   try {
     const {
       params: { ticket },

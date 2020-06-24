@@ -1,8 +1,15 @@
 import httpProxy from 'http-proxy';
-import log from '../utils/log';
 
-export default (options, validate, render) => {
+export default ({ log, cache }, options, render) => {
   const proxy = httpProxy.createProxyServer(options);
+  const iepMap = cache('iepMap');
+  // export a ticketed map to the application. Use prod until the ticket
+  // is ready
+  const validate = async (ticket, stage) => {
+    const iep = (await iepMap.get(ticket)) || {};
+    if (iep.stage === stage) return iep;
+    return (await iepMap.get('prod'))[0];
+  };
 
   proxy.on('proxyRes', (proxyRes, req, res) => {
     const {
@@ -25,7 +32,7 @@ export default (options, validate, render) => {
         if (data.includes('</html>')) {
           try {
             // render the body using the ticketed entry point
-            render(iep, body).then((buffer) => {
+            render(ticket, body).then((buffer) => {
               req.stamp.buffer = buffer;
               res.end = _end;
               if (options.inject) return res.end(options.inject(buffer));

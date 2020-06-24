@@ -1,40 +1,32 @@
 import express from 'express';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import bodyparser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import fileupload from 'express-fileupload';
 
-import proxyMW from '../plugins/proxy';
-import resolveMW from '../plugins/resolve';
-import resolver from './resolver';
-import load, { bind } from './middleware';
-import { getService } from '../utils/stamp';
+import iep from '../plugins/iep';
+import proxyMW from '../plugins/proxy-mw';
+import middleware from '../utils/middleware';
+import applyDefaults from './config-defaults';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const stamp = express();
-const root = process.env.PWD;
 
-export default ({ stampDir, entry, plugins, cache }) => {
+export default (options) => {
+  const config = applyDefaults(options);
+
+  const { routes, rootPath, plugins, cache, log } = config;
   const iepMap = cache('iepMap', {
     defaults: { prod: [] },
-    persistRoot: `${root}/${stampDir}`,
+    persistRoot: `${rootPath}${routes.stamped}`,
   });
 
-  // export a ticketed map to the application. Use prod until the ticket
-  // is ready
-  const validTicket = async (ticket, stage) => {
-    const iep = (await iepMap.get(ticket)) || {};
-    if (iep.stage === stage) return iep;
-    return (await iepMap.get('prod'))[0];
-  };
-
-  const render = (entry) => (iep, body) => {
-    return new Promise((resolve) => {
-      const { worker, requestId } = getService(iep.ticket);
-      worker.send({ ticket: iep.ticket, entry, body, requestId });
-      worker.on('message', ({ responseId, buffer }) => {
-        if (requestId === responseId) resolve(buffer);
-      });
-    });
-  };
+  const { load, bind } = middleware(config, [
+    path.resolve(__dirname, '../plugins'),
+  ]);
 
   stamp.use(bodyparser.urlencoded({ extended: true }));
   stamp.use(bodyparser.json());
@@ -52,7 +44,7 @@ export default ({ stampDir, entry, plugins, cache }) => {
     next();
   });
 
-  const { pipeline, proxy, ...middleware } = plugins;
+  const { pipeline, proxy, ...rest } = plugins;
 
   // Stamp Cli API
   stamp.get('/stamp/list', bind(pipeline.list || ['list'], iepMap));
@@ -70,22 +62,18 @@ export default ({ stampDir, entry, plugins, cache }) => {
   );
   stamp.put(
     '/stamp/:ticket',
-    bind(pipeline.update || ['update'], iepMap, stampDir)
+    bind(pipeline.update || ['update'], iepMap, rootPath, routes.stamped)
   );
   stamp.post('/stamp', bind(pipeline.register || ['register'], iepMap));
 
-  const renderOnEntry = render(entry);
-
-  load(stamp, middleware, { iepMap }).then(() => {
+  load(stamp, rest, iepMap).then(() => {
+    // IEP middleware
+    const { resolver, render } = iep(config);
+    stamp.use(`${routes.src}/*`, resolver);
     if (proxy) {
-      stamp.use(proxyMW(proxy, validTicket, renderOnEntry));
+      stamp.use(proxyMW(config, proxy, render));
     }
   });
 
-  return {
-    validTicket,
-    stamp,
-    render: renderOnEntry,
-    resolve: resolveMW(cache, resolver, stampDir),
-  };
+  return stamp;
 };

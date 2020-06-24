@@ -1,13 +1,12 @@
 import ImportMap from '../utils/import-map';
 import stamp from '../utils/stamp';
-import log from '../utils/log';
 
 // tickets could be registered directly with IEP. In this workflow, ticket registration
 // would be a distinct step before developer registration and would typically be performed
 // by the ticket / workflow manager.
 // An alternative is to integrate the IEP service with the ticket service.
 // This alpha just accepts a unique ticket number
-export default (iepMap) => async (req, res) => {
+export default ({ log }, iepMap) => async (req, res) => {
   try {
     const {
       body: { ticket, base },

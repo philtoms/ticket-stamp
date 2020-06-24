@@ -2,7 +2,6 @@ import register from './register';
 import promote from './promote';
 import revert from './revert';
 import remove from './remove';
-import log from '../utils/log';
 
 const pick = (obj, [head, ...tail]) =>
   tail.length ? pick(obj[head], tail) : obj[head];
@@ -13,7 +12,7 @@ const stageIdx = {
   prod: 3,
 };
 
-export default ({ workflowMap, issueKeys, iepMap }) => async (
+export default ({ log }, { workflowMap, issueKeys, iepMap }) => async (
   req,
   res,
   next
