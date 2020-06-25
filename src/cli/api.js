@@ -2,9 +2,9 @@ import fs from 'fs';
 import chokidar from 'chokidar';
 import FormData from 'form-data';
 import git from '../utils/git';
-import fetch from '../utils/fetch';
-import log from '../utils/log';
 import split from '../utils/split-path';
+import log from './log';
+import fetch from './fetch';
 
 const srcDir = process.env.SRC || process.cwd() + '/src';
 

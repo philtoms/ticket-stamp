@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import log from './log';
+
 export default (action, url, method, body, verbose) =>
   fetch(url, {
     method,

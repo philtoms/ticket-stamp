@@ -28,10 +28,12 @@ export default ({ log }, iepMap) => async (req, res) => {
         prod.unshift(stamped);
         iepMap.remove(ticket);
         iepMap.set('prod', prod);
-        return res.send(log('promote', prod[0]));
+        log.info('promote', prod[0]);
+        return res.status(200).send(prod[0]);
       }
       iepMap.set(ticket, stamped);
-      return res.status(200).send(log('promote', stamped));
+      log.info('promote', stamped);
+      return res.status(200).send(stamped);
     }
 
     res.status(404).send(`unrecognized ticket ${ticket}`);

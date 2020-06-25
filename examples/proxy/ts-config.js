@@ -1,4 +1,12 @@
+import winston from 'winston';
+const consoleTransport = new winston.transports.Console();
+const myWinstonOptions = {
+  transports: [consoleTransport],
+};
+const log = new winston.createLogger(myWinstonOptions);
+
 export default {
+  log,
   plugins: {
     proxy: {
       changeOrigin: true,

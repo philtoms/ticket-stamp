@@ -33,7 +33,8 @@ export default ({ log }, iepMap) => async (req, res) => {
       map: ImportMap((prod[0] || {}).map || { imports: {} }, ticket),
     });
     iepMap.set(ticket, stamped);
-    return res.status(201).send(log('register', stamped));
+    log.info('register', stamped);
+    return res.status(201).send(stamped);
   } catch (err) {
     log.error(err);
     res.status(500).send('Server error');

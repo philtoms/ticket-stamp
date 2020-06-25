@@ -30,7 +30,8 @@ export default ({ rootPath, stampDir, log }, iepMap) => async (req, res) => {
         true // restart worker to generate new import-map on next request
       );
       iepMap.set(ticket, stamped);
-      return res.send(log('update', stamped));
+      log.info('update', stamped);
+      return res.status(200).send(stamped);
     }
     res.status(404).send(`unrecognized ticket ${ticket}`);
   } catch (err) {

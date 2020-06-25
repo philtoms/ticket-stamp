@@ -22,11 +22,10 @@ export default ({ log }, iepMap) => async (req, res) => {
         prod.filter((entry) => entry.ticket !== ticket)
       );
       iepMap.set(ticket, stamped);
-      return res.send(
-        log('revert', {
-          [ticket]: stamped,
-        })
-      );
+      log.info('revert', {
+        [ticket]: stamped,
+      });
+      return res.status(200).send(stamped);
     }
 
     const iep = await iepMap.get(ticket);
@@ -38,7 +37,8 @@ export default ({ log }, iepMap) => async (req, res) => {
         status: 'reverted',
       });
       iepMap.set(ticket, stamped);
-      return res.send(log('revert', stamped));
+      log.info('revert', stamped);
+      return res.status(200).send(stamped);
     }
     res.status(404).send(`unrecognized ticket ${ticket}`);
   } catch (err) {

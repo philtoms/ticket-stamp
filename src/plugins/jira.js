@@ -61,7 +61,7 @@ export default ({ log }, { workflowMap, issueKeys, iepMap }) => async (
     }
 
     // do nothing but log
-    log('webhooks/jira', `unrecognized ticket ${ticket}`);
+    log.warn('webhooks/jira', `unrecognized ticket ${ticket}`);
     return res.status(200).send(`unrecognized ticket ${ticket}`);
   }
 

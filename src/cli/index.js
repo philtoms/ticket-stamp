@@ -1,4 +1,4 @@
-import log from '../utils/log';
+import log from './log';
 import options, { optionDefinitions } from './options';
 import usage from './usage';
 import { register, update, list, promote, revert, close } from './api';

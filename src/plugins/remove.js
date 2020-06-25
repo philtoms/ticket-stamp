@@ -9,7 +9,8 @@ export default ({ log }, iepMap) => async (req, res) => {
       (entry) => entry.ticket !== ticket
     );
     iepMap.set('prod', prod);
-    return res.send(log('removed', ticket));
+    log.info('removed', ticket);
+    return res.status(200).send(ticket);
   } catch (err) {
     log.error(err);
     res.status(500).send('Server error');
