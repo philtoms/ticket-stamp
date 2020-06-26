@@ -12,7 +12,7 @@ const stageIdx = {
   prod: 3,
 };
 
-export default ({ log }, { workflowMap, issueKeys, iepMap }) => async (
+export default ({ log }, { workflowMap, issueKeys }, iepMap) => async (
   req,
   res,
   next
