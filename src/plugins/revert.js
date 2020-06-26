@@ -4,7 +4,7 @@ export default ({ log }, iepMap) => async (req, res) => {
   try {
     const {
       params: { ticket },
-      stamp: { user, stage },
+      stamp: { user, stage, id },
     } = req;
 
     const prod = await iepMap.get('prod');
@@ -12,6 +12,7 @@ export default ({ log }, iepMap) => async (req, res) => {
       // when reverting from prod, ALWAYS revert from the head
       const stamped = stamp({
         ...JSON.parse(JSON.stringify(prod[0])),
+        id,
         user,
         ticket,
         stage: stage || 'qa',
@@ -32,6 +33,7 @@ export default ({ log }, iepMap) => async (req, res) => {
     if (iep) {
       const stamped = stamp({
         ...iep,
+        id,
         user,
         stage: 'dev',
         status: 'reverted',

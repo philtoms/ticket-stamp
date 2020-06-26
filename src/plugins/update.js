@@ -5,6 +5,7 @@ import stamp from '../utils/stamp';
 export default ({ rootPath, stampDir, log }, iepMap) => async (req, res) => {
   try {
     const { ticket } = req.params;
+    const { id } = req.stamp;
     const { name, type } = req.body;
     const { md5, data } = req.files.file;
     const iep = await iepMap.get(ticket);
@@ -23,6 +24,7 @@ export default ({ rootPath, stampDir, log }, iepMap) => async (req, res) => {
       const stamped = stamp(
         {
           ...iep,
+          id,
           map: ImportMap(iep.map, alias, iepName),
           status: 'updated',
           files: [...(iep.files || []).filter((file) => file !== alias), alias],

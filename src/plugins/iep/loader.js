@@ -7,7 +7,8 @@ import resolver from './resolver';
 import applyDefaults from './config-defaults';
 
 const root = process.env.PWD;
-const configPath = path.resolve(root, 'ts-config.js');
+const configName = process.env.CONFIG || 'ts-config.js';
+const configPath = path.resolve(root, configName);
 
 // lazy load the config after the pre-loader cycle has completed.
 // Otherwise the dynamic import will force create a new singleton
