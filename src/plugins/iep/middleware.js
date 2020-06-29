@@ -1,7 +1,9 @@
 import fs from 'fs';
+import { dirname } from 'path';
 import resolve from './resolver';
 
-export default (cache, srcPath, log) => {
+export default (cache, clientEntry, log) => {
+  const srcPath = dirname(clientEntry);
   const iepMap = cache('iepMap');
   const srcMap = cache('srcMap', {
     persistKey: true,

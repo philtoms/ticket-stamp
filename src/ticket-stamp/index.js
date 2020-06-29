@@ -8,7 +8,7 @@ import fileupload from 'express-fileupload';
 import iep from '../plugins/iep';
 import proxyMW from '../plugins/proxy-mw';
 import middleware from '../utils/middleware';
-import applyDefaults from './config-defaults';
+import tsConfig from './config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -16,12 +16,16 @@ const __dirname = dirname(__filename);
 const stamp = express();
 
 export default (options) => {
-  const config = applyDefaults(options);
+  const config = tsConfig(options);
 
-  const { routes, rootPath, plugins, cache, log } = config;
+  const {
+    routes,
+    plugins,
+    iep: { cache, persistRoot },
+  } = config;
   const iepMap = cache('iepMap', {
     defaults: { prod: [] },
-    persistRoot: `${rootPath}${routes.stamped}`,
+    persistRoot,
   });
 
   const { load, bind } = middleware(config, [
@@ -54,18 +58,15 @@ export default (options) => {
   );
   stamp.put('/stamp/:ticket/revert', bind('revert', pipeline.revert, iepMap));
   stamp.put('/stamp/:ticket/remove', bind('remove', pipeline.remove, iepMap));
-  stamp.put(
-    '/stamp/:ticket',
-    bind('update', pipeline.update, iepMap, rootPath, routes.stamped)
-  );
+  stamp.put('/stamp/:ticket', bind('update', pipeline.update, iepMap));
   stamp.post('/stamp', bind('register', pipeline.register, iepMap));
 
   load(stamp, rest, iepMap).then(() => {
     // IEP middleware
-    const { resolver, render } = iep(config);
-    stamp.use(`${routes.src}/*`, resolver);
+    const { middleware, render } = iep(config);
+    stamp.use(`${routes.src}/*`, middleware);
     if (proxy) {
-      stamp.use(proxyMW(config, proxy, render));
+      stamp.use(proxyMW(config.iep, proxy, render));
     }
   });
 

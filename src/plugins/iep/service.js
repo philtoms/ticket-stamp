@@ -22,8 +22,8 @@ export const restart = (ticket) => {
     worker: fork(path.resolve(__dirname, 'worker.js')),
     // worker: {
     //   kill: () => {},
-    //   send: ({ ticket, entry, body, requestId }) => {
-    //     import(`${entry}?__iep=${ticket}`).then((module) => {
+    //   send: ({ ticket, serverEntry, body, requestId }) => {
+    //     import(`${serverEntry}?__iep=${ticket}`).then((module) => {
     //       serviceMap[ticket].worker.return({
     //         responseId: requestId,
     //         buffer: (module.default || module)(body),

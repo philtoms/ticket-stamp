@@ -4,26 +4,22 @@
 // https://nodejs.org/api/esm.html#esm_code_resolve_code_hook
 import path from 'path';
 import resolver from './resolver';
-import applyDefaults from './config-defaults';
 
 const root = process.env.PWD;
-const configName = process.env.CONFIG || 'ts-config.js';
+const configName = process.env.CONFIG || 'iep-config.js';
 const configPath = path.resolve(root, configName);
 
 // lazy load the config after the pre-loader cycle has completed.
-// Otherwise the dynamic import will force create a new singleton
+// Otherwise the dynamic import will force create a bogus singleton.
 const lazyLoad = (entity, opts) => {
   let cached;
   const cache = () =>
     cached ||
     (cached = import(configPath).then((module) => {
-      const config = applyDefaults(module.default);
       const {
-        rootPath,
-        routes: { stamped },
-      } = config;
-      const persistRoot = rootPath + stamped;
-      return config.cache(entity, {
+        iep: { cache, persistRoot },
+      } = module.default;
+      return cache(entity, {
         ...opts,
         ...(opts.persistKey ? {} : { persistRoot }),
       });
