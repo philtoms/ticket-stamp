@@ -4,7 +4,7 @@
   "type": "module",
   "description": "This example defers all script handling to `ticket-stamp` middleware",
   "scripts": {
-    "start": "node --experimental-loader ../../src/plugins/iep/loader.js --experimental-specifier-resolution=node index.js",
+    "start": "node --experimental-specifier-resolution=node index.js",
     "stamp": "node --experimental-specifier-resolution=node ../../stamp"
   },
   "dependencies": {
