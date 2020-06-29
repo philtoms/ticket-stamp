@@ -1,6 +1,6 @@
 import stamp from '../utils/stamp';
 
-export default ({ log }, iepMap) => async (req, res) => {
+export default ({ iep: { log } }, iepMap) => async (req, res) => {
   try {
     const {
       params: { ticket },

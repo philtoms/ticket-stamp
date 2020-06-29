@@ -11,11 +11,11 @@ export default (
   entity,
   { defaults = {}, persistRoot = '', persistKey = false } = {}
 ) => {
-  const persistPath = (key) =>
+  const resolvePath = (key) =>
     path.resolve(persistRoot, `${entity}.${persistKey ? key : 'json'}`);
 
   const persist = (key) => {
-    const path = persistPath();
+    const path = resolvePath();
     if (persistRoot) {
       fs.writeFile(path, JSON.stringify(cache[entity]), (err) => {
         if (err) {
@@ -31,7 +31,7 @@ export default (
   };
 
   const load = (key, timestamp) => {
-    const path = persistPath();
+    const path = resolvePath();
     if (fs.existsSync(path)) {
       const data = fs.readFileSync(path, 'utf8');
       cache[entity] = JSON.parse(data);
@@ -45,7 +45,7 @@ export default (
 
   const maybeFrom = (fn) => (key) => {
     if (persistRoot && key) {
-      const path = persistPath(key);
+      const path = resolvePath(key);
       const { mtime } = fs.statSync(path);
       const timestamp = mtime.getTime();
       if (cache[entity][key] && timestamp > cache[entity][key].timestamp) {
@@ -61,6 +61,8 @@ export default (
   }
 
   return {
+    persistRoot,
+    persistKey,
     get: maybeFrom((key) => Promise.resolve(cache[entity][key] || false)),
     getAll: () => Promise.resolve(Object.entries(cache[entity])),
     set: (key, value) => {

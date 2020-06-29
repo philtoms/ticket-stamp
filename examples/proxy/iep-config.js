@@ -1,12 +1,23 @@
 import winston from 'winston';
+import tsConfig from '../../src/ticket-stamp/config';
+
 const consoleTransport = new winston.transports.Console();
 const myWinstonOptions = {
   transports: [consoleTransport],
 };
 const log = new winston.createLogger(myWinstonOptions);
 
-export default {
-  log,
+// const rootPath = process.env.PWD;
+
+// const serverEntry =
+//   process.env.SERVER_ENTRY || path.resolve(rootPath, 'src/app/index.js');
+// const clientEntry =
+//   process.env.CLIENT_ENTRY || path.resolve(rootPath, 'src/index.js');
+// const stampedPath =
+//   process.env.STAMPED_PATH || path.resolve(rootPath, 'stamped');
+
+export default tsConfig({
+  // log,
   plugins: {
     proxy: {
       changeOrigin: true,
@@ -37,4 +48,4 @@ export default {
       promote: ['git-policy', 'promote'],
     },
   },
-};
+});

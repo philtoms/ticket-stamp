@@ -1,0 +1,25 @@
+{
+  "name": "iep",
+  "version": "1.0.0",
+  "description": "Isolated entry point for node esm applications",
+  "main": "index.mjs",
+  "type": "module",
+  "author": "Phil Toms phil.toms@hotmail.co.uk",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --loader esm-fake-loader --experimental-specifier-resolution=node ./node_modules/.bin/ava --verbose"
+  },
+  "devDependencies": {
+    "ava": "^3.8.2",
+    "esm-fake-loader": "^1.0.1"
+  },
+  "ava": {
+    "nodeArguments": [
+      "--no-warnings"
+    ],
+    "files": [
+      "**/*.test.js",
+      "**/*.test.mjs"
+    ]
+  }
+}

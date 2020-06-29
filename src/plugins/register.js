@@ -6,7 +6,7 @@ import stamp from '../utils/stamp';
 // by the ticket / workflow manager.
 // An alternative is to integrate the IEP service with the ticket service.
 // This alpha just accepts a unique ticket number
-export default ({ log }, iepMap) => async (req, res) => {
+export default ({ iep: { log } }, iepMap) => async (req, res) => {
   try {
     const {
       body: { ticket, base },

@@ -1,4 +1,4 @@
-import tsConfig from './ts-config';
+import iepConfig from './iep-config';
 import server from './src/server';
 
-server(tsConfig);
+server(iepConfig);

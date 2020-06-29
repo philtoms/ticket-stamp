@@ -1,4 +1,4 @@
-export default ({ log }, iepMap) => async (req, res) => {
+export default ({ iep: { log } }, iepMap) => async (req, res) => {
   try {
     const { stage } = req.query;
     const tickets = await iepMap.getAll();

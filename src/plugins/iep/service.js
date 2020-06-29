@@ -19,18 +19,14 @@ export const restart = (ticket) => {
     delete serviceMap[ticket];
   }
   serviceMap[ticket] = {
-    worker: fork(path.resolve(__dirname, 'worker.js')),
-    // worker: {
-    //   kill: () => {},
-    //   send: ({ ticket, entry, body, requestId }) => {
-    //     import(`${entry}?__iep=${ticket}`).then((module) => {
-    //       serviceMap[ticket].worker.return({
-    //         responseId: requestId,
-    //         buffer: (module.default || module)(body),
-    //       });
-    //     });
-    //   },
-    //   on: (_, cb) => (serviceMap[ticket].worker.return = cb),
-    // },
+    worker: fork(path.resolve(__dirname, 'worker.js'), {
+      execArgv: [
+        '--experimental-loader',
+        '../../src/plugins/iep/loader.js',
+        '--experimental-specifier-resolution=node',
+        '--no-warnings',
+        //        '--inspect-brk',
+      ],
+    }),
   };
 };

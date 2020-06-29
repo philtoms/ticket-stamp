@@ -4,7 +4,7 @@ import express from 'express';
 import compression from 'compression';
 
 import inject from './inject';
-import ticketStamp from '../../../../src/iep';
+import ticketStamp from '../../../../src/ticket-stamp';
 
 export default (config) => {
   const __filename = fileURLToPath(import.meta.url);

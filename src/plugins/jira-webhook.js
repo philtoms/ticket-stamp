@@ -11,7 +11,11 @@ const stageIdx = {
   prod: 3,
 };
 
-export default ({ log }, { workflowMap, issueKeys }, iepMap) => {
+export default (config, { workflowMap, issueKeys }, iepMap) => {
+  const {
+    iep: { log },
+  } = config;
+
   const handler = async (req, res, next) => {
     const webHookId = req.get('X-Atlassian-Webhook-Identifier');
     // map the issue on to ticket-stamp semantics
@@ -21,7 +25,7 @@ export default ({ log }, { workflowMap, issueKeys }, iepMap) => {
     const done = pick(req.body, issueKeys.done);
 
     if (webhookEvent === 'jira:issue_created') {
-      return register({ log }, iepMap)(
+      return register(config, iepMap)(
         { body: { ticket }, stamp: { user, id: webHookId } },
         res,
         next
@@ -40,7 +44,7 @@ export default ({ log }, { workflowMap, issueKeys }, iepMap) => {
 
       if (
         !iep &&
-        (await register({ log }, iepMap)(
+        (await register(config, iepMap)(
           { body: { ticket }, stamp: { user, id: webHookId } },
           localRes(),
           next
@@ -52,7 +56,7 @@ export default ({ log }, { workflowMap, issueKeys }, iepMap) => {
       if (iep) {
         if (iep.id === webHookId) return res.send(200);
         if (stageIdx[stage] > stageIdx[iep.stage])
-          return promote({ log }, iepMap)(
+          return promote(config, iepMap)(
             {
               params: { ticket },
               stamp: { user, stage, id: webHookId, done },
@@ -62,7 +66,7 @@ export default ({ log }, { workflowMap, issueKeys }, iepMap) => {
           );
 
         if (stageIdx[stage] < stageIdx[iep.stage])
-          return revert({ log }, iepMap)(
+          return revert(config, iepMap)(
             {
               params: { ticket },
               stamp: { user, stage, id: webHookId },
@@ -79,7 +83,7 @@ export default ({ log }, { workflowMap, issueKeys }, iepMap) => {
     }
 
     if (webhookEvent === 'jira:issue_deleted') {
-      return remove({ log }, iepMap)(
+      return remove(config, iepMap)(
         { params: { ticket }, stamp: { user, id: webHookId } },
         res,
         next
