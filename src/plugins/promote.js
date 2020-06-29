@@ -10,7 +10,7 @@ export default ({ log }, iepMap) => async (req, res) => {
   try {
     const {
       params: { ticket },
-      stamp: { promote: { base } = {}, user, stage: reqStage },
+      stamp: { promote: { base } = {}, user, stage: reqStage, id, done },
     } = req;
 
     const iep = await iepMap.get(ticket);
@@ -18,12 +18,13 @@ export default ({ log }, iepMap) => async (req, res) => {
       const stage = reqStage || (iep.stage === 'dev' ? 'qa' : 'prod');
       const stamped = stamp({
         ...iep,
+        id,
         user,
         base,
         stage,
         status: 'promoted',
       });
-      if (stage === 'prod') {
+      if (stage === 'prod' && done) {
         const prod = await iepMap.get('prod');
         prod.unshift(stamped);
         iepMap.remove(ticket);

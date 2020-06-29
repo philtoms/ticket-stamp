@@ -10,7 +10,7 @@ export default ({ log }, iepMap) => async (req, res) => {
   try {
     const {
       body: { ticket, base },
-      stamp: { user },
+      stamp: { user, id },
     } = req;
 
     const prod = await iepMap.get('prod');
@@ -25,6 +25,7 @@ export default ({ log }, iepMap) => async (req, res) => {
       return res.status(202).send(`unchanged ticket ${ticket}`);
     }
     const stamped = stamp({
+      id,
       user,
       ticket,
       stage: 'dev',

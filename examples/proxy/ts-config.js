@@ -15,7 +15,7 @@ export default {
       },
       target: process.env.TARGET,
     },
-    jira: {
+    'jira-webhook': {
       mount: {
         method: 'POST',
         path: '/webhooks/jira',

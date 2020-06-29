@@ -31,7 +31,7 @@ export default (config, paths) => ({
           ...rest
         } = options;
 
-        return loadAll(paths, [plugin], config, { ...rest, ...args }).then(
+        return loadAll(paths, [plugin], config, ...[rest, ...args]).then(
           (module) => {
             if (method) {
               app[method.toLowerCase()](path, module);
@@ -42,8 +42,12 @@ export default (config, paths) => ({
     ),
 
   // run pre-mounted m/w pipelines to end or falsy
-  bind: (plugins, ...args) => {
-    const mw = loadAll(paths, plugins, config, ...args);
+  bind: (builtin, plugins = [], ...args) => {
+    const pipeline = plugins.includes(builtin)
+      ? plugins
+      : [...plugins, builtin];
+
+    const mw = loadAll(paths, pipeline, config, ...args);
 
     return (req, res, next) =>
       mw.then((modules) => {

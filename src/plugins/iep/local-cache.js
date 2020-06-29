@@ -63,8 +63,10 @@ export default (
   return {
     get: maybeFrom((key) => Promise.resolve(cache[entity][key] || false)),
     getAll: () => Promise.resolve(Object.entries(cache[entity])),
-    set: (key, value) =>
-      Promise.resolve((cache[entity][key] = value)).then(() => persist(key)),
+    set: (key, value) => {
+      cache[entity][key] = value;
+      return Promise.resolve().then(() => persist(key));
+    },
     remove: (key) => {
       delete cache[entity][key];
       return Promise.resolve().then(() => persist(key));

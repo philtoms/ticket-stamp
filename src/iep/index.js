@@ -47,24 +47,18 @@ export default (options) => {
   const { pipeline, proxy, ...rest } = plugins;
 
   // Stamp Cli API
-  stamp.get('/stamp/list', bind(pipeline.list || ['list'], iepMap));
+  stamp.get('/stamp/list', bind('list', pipeline.list, iepMap));
   stamp.put(
     '/stamp/:ticket/promote',
-    bind(pipeline.promote || ['promote'], iepMap)
+    bind('promote', pipeline.promote, iepMap)
   );
-  stamp.put(
-    '/stamp/:ticket/revert',
-    bind(pipeline.revert || ['revert'], iepMap)
-  );
-  stamp.put(
-    '/stamp/:ticket/remove',
-    bind(pipeline.remove || ['remove'], iepMap)
-  );
+  stamp.put('/stamp/:ticket/revert', bind('revert', pipeline.revert, iepMap));
+  stamp.put('/stamp/:ticket/remove', bind('remove', pipeline.remove, iepMap));
   stamp.put(
     '/stamp/:ticket',
-    bind(pipeline.update || ['update'], iepMap, rootPath, routes.stamped)
+    bind('update', pipeline.update, iepMap, rootPath, routes.stamped)
   );
-  stamp.post('/stamp', bind(pipeline.register || ['register'], iepMap));
+  stamp.post('/stamp', bind('register', pipeline.register, iepMap));
 
   load(stamp, rest, iepMap).then(() => {
     // IEP middleware

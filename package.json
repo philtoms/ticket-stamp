@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "test": "ava"
+    "test": "node --loader esm-fake-loader --experimental-specifier-resolution=node ./node_modules/.bin/ava --verbose"
   },
   "dependencies": {
     "body-parser": "^1.19.0",
@@ -15,7 +15,6 @@
     "cookie-parser": "^1.4.5",
     "current-git-branch": "^1.1.0",
     "es-module-lexer": "^0.3.18",
-    "esm": "^3.2.25",
     "execa": "^4.0.0",
     "express": "^4.17.1",
     "express-fileupload": "^1.1.7-alpha.3",
@@ -25,11 +24,15 @@
     "urlencode": "^1.1.0"
   },
   "devDependencies": {
-    "ava": "^3.8.2"
+    "ava": "^3.8.2",
+    "esm-fake-loader": "philtoms/esm-fake-loader.git"
   },
   "ava": {
+    "nodeArguments": [
+      "--no-warnings"
+    ],
     "files": [
-      "src/**/*.test.js"
+      "**/*.test.js"
     ]
   }
 }
