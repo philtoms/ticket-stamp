@@ -24,19 +24,13 @@ export default ({ iep: { log }, stampedPath }, iepMap) => {
         // Will probably split into SSR and CSR imports
         const alias = type === 'js' ? name : `${name}.${type}`;
 
-        const stamped = stamp(
-          {
-            ...iep,
-            id,
-            map: ImportMap(iep.map, alias, iepName),
-            status: 'updated',
-            files: [
-              ...(iep.files || []).filter((file) => file !== alias),
-              alias,
-            ],
-          },
-          true // restart worker to generate new import-map on next request
-        );
+        const stamped = stamp({
+          ...iep,
+          id,
+          map: ImportMap(iep.map, alias, iepName),
+          status: 'updated',
+          files: [...(iep.files || []).filter((file) => file !== alias), alias],
+        });
         iepMap.set(ticket, stamped);
         log.info('update', stamped);
         return res.status(200).send(stamped);

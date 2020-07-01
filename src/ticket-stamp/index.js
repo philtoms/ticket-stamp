@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import fileupload from 'express-fileupload';
 
 import iep from '../plugins/iep';
+import cache from '../plugins/iep/import-cache';
 import proxyMW from '../plugins/proxy-mw';
 import middleware from '../utils/middleware';
 import tsConfig from './config';
@@ -21,11 +22,12 @@ export default (options) => {
   const {
     routes,
     plugins,
-    iep: { cache, persistRoot },
+    iep: { log },
   } = config;
+
   const iepMap = cache('iepMap', {
     defaults: { prod: [] },
-    persistRoot,
+    persist: true,
   });
 
   const { load, bind } = middleware(config, [
@@ -66,7 +68,7 @@ export default (options) => {
     const { middleware, render } = iep(config);
     stamp.use(`${routes.src}/*`, middleware);
     if (proxy) {
-      stamp.use(proxyMW(config.iep, proxy, render));
+      stamp.use(proxyMW({ log, cache }, proxy, render));
     }
   });
 

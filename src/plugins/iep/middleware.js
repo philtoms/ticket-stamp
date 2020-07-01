@@ -1,13 +1,13 @@
 import fs from 'fs';
 import { dirname } from 'path';
 import resolve from './resolver';
+import cache from './import-cache';
 
-export default (cache, clientEntry, log) => {
+export default (clientEntry, log) => {
   const srcPath = dirname(clientEntry);
   const iepMap = cache('iepMap');
-  const srcMap = cache('srcMap', {
-    persistKey: true,
-  });
+  const iepSrc = cache('iepSrc');
+
   return async (req, res) => {
     try {
       const [, ticket] = (req.cookies.stamp || '').split('=');
@@ -17,16 +17,15 @@ export default (cache, clientEntry, log) => {
       const iep = (await iepMap.get(ticket)) ||
         (await iepMap.get('prod')[0]) || { map: {} };
 
-      const cacheKey = `${ticket}${path}`;
-      const cached = await srcMap.get(cacheKey);
+      const cacheKey = `${ticket}.${path}`;
+      const cached = await iepSrc.get(cacheKey);
 
       if (cached.timestamp > iep.timestamp) {
         return res.send(cached.source);
       }
 
       const source = fs.readFileSync(path, 'utf8');
-      resolve(source, path, iep.map).then((source) => {
-        srcMap.set(cacheKey, { source });
+      resolve(source, ticket, path, iep.map).then((source) => {
         res.send(source);
       });
     } catch (err) {
