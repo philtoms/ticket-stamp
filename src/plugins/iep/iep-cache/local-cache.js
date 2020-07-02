@@ -2,21 +2,27 @@ import fs from 'fs';
 import { resolve } from 'path';
 
 // isolate private cache
-const __CACHE = Symbol('import-cache');
+const __CACHE = Symbol('iep-cache');
 
 globalThis[__CACHE] = globalThis[__CACHE] || {};
 const cache = globalThis[__CACHE];
 
 export default (
   entity,
-  { defaults = {}, persist, persistRoot, persistKey, IEP_STR } = {},
+  { defaults = {}, persistUrl, persistKey, IEP_STR } = {},
   log
 ) => {
+  const path =
+    persistUrl && resolve(persistUrl, persistKey ? '' : `${entity}.json`);
+
+  cache[entity] = cache[entity] || {
+    data: defaults,
+  };
+
   try {
     const persistData = (persistKey) => {
-      // key persistance overrides root option
-      const { persist = persistKey, path, data } = cache[entity];
-      if (path && persist) {
+      const { data } = cache[entity];
+      if (persistUrl || persistKey) {
         const json = persistKey
           ? data[persistKey][IEP_STR] || JSON.stringify(data[persistKey])
           : JSON.stringify(data);
@@ -31,11 +37,11 @@ export default (
     };
 
     const loadData = () => {
-      const { path } = cache[entity];
-      if (path && fs.existsSync(path)) {
+      if (!cache[entity].loaded && fs.existsSync(path)) {
         const data = fs.readFileSync(path, 'utf8');
         if (data) {
           cache[entity].data = JSON.parse(data);
+          cache[entity].loaded = true;
         }
       }
     };
@@ -59,13 +65,7 @@ export default (
       message.remove && remove(...message.remove);
     };
 
-    cache[entity] = cache[entity] || {
-      data: defaults,
-      persist,
-      path: resolve(persistRoot, persistKey ? '' : `${entity}.json`),
-    };
-
-    // key persisted data is loaded on demand
+    // key persisted data is not loaded until demand
     if (!persistKey) loadData();
 
     return {

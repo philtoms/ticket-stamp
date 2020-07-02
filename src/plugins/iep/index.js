@@ -3,9 +3,9 @@ import render from './render';
 import applyDefaults from './config';
 
 export default (config) => {
-  const { serverEntry, clientEntry, log } = applyDefaults(config);
+  const iepConf = applyDefaults(config);
   return {
-    render: render(serverEntry),
-    middleware: middleware(clientEntry, log),
+    render: render(iepConf),
+    middleware: middleware(iepConf),
   };
 };
