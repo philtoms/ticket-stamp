@@ -1,7 +1,9 @@
-import { init, parse } from 'es-module-lexer/dist/lexer';
-
 import fs from 'fs';
 import path from 'path';
+import { init, parse } from 'es-module-lexer/dist/lexer';
+
+import { IEP_STR } from './import-cache';
+import { publish } from './utils/pubsub';
 
 const fsPath = (pathname, root) => {
   if (pathname.startsWith('/')) pathname = pathname.substr(1);
@@ -22,11 +24,11 @@ const resolvePackage = (pathname) => {
 
 const srcDir = process.env.SRC || process.cwd() + '/src';
 
-export default async (source, pathname, map, baseDir = srcDir) => {
+export default async (source, ticket, pathname, map, baseDir = srcDir) => {
   await init;
   const [imports] = parse(source);
   const root = path.parse(pathname).dir;
-  return imports.reverse().reduce((acc, { s, e, d }) => {
+  const resolved = imports.reverse().reduce((acc, { s, e, d }) => {
     if (d !== -1) return acc;
     let specifier = acc.substring(s, e);
     const selector = specifier.replace('/index.js', '').split('/').pop();
@@ -71,4 +73,8 @@ export default async (source, pathname, map, baseDir = srcDir) => {
     }
     return specifier ? acc.substr(0, s) + specifier + acc.substr(e) : acc;
   }, source);
+
+  const cacheKey = `${ticket}.${pathname}`;
+  publish('iepSrc', { set: [cacheKey, { [IEP_STR]: resolved }] });
+  return resolved;
 };

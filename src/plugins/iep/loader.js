@@ -4,37 +4,17 @@
 // https://nodejs.org/api/esm.html#esm_code_resolve_code_hook
 import path from 'path';
 import resolver from './resolver';
+import cache, { IEP_STR } from './import-cache';
+import { subscribe } from './utils/pubsub';
 
 const root = process.env.PWD;
-const configName = process.env.CONFIG || 'iep-config.js';
-const configPath = path.resolve(root, configName);
 
-// lazy load the config after the pre-loader cycle has completed.
-// Otherwise the dynamic import will force create a bogus singleton.
-const lazyLoad = (entity, opts) => {
-  let cached;
-  const cache = () =>
-    cached ||
-    (cached = import(configPath).then((module) => {
-      const {
-        iep: { cache, persistRoot },
-      } = module.default;
-      return cache(entity, {
-        ...opts,
-        ...(opts.persistKey ? {} : { persistRoot }),
-      });
-    }));
+const iepMap = cache('iepMap');
+const iepSrc = cache('iepSrc');
 
-  return {
-    get: async (...args) => (await cache()).get(...args),
-    set: async (...args) => (await cache()).set(...args),
-  };
-};
-
-const __iepMap = lazyLoad('iepMap', {});
-const __srcMap = lazyLoad('srcMap', {
-  persistKey: true,
-});
+// pub-sub: subscribe to published entity updates
+subscribe('iepMap', iepMap.update, process);
+subscribe('iepSrc', iepSrc.update, process);
 
 const extractIEP = (specifier, protocol = '') => {
   const { pathname, searchParams } = new URL(protocol + specifier);
@@ -64,10 +44,10 @@ export async function resolve(specifier, context, defaultResolve) {
 export async function getSource(url, context, defaultGetSource) {
   if (url.includes('__iep=')) {
     const [pathname, ticket] = extractIEP(url);
-    const cacheKey = `${ticket}${pathname}`;
+    const cacheKey = `${ticket}.${pathname}`;
 
-    const iep = await __iepMap.get(ticket);
-    const { timestamp, source } = await __srcMap.get(cacheKey, iep);
+    const iep = await iepMap.get(ticket);
+    const { timestamp, [IEP_STR]: source } = await iepSrc.get(cacheKey, iep);
     if (timestamp > iep.timestamp) {
       return {
         source,
@@ -87,17 +67,16 @@ export async function transformSource(source, context, defaultTransformSource) {
   const { url } = context;
   if (url.includes('__iep=')) {
     const [pathname, ticket] = extractIEP(url);
-    const iep = await __iepMap.get(ticket);
+    const iep = await iepMap.get(ticket);
     const cacheKey = `${ticket}.${pathname}`;
-    const { timestamp } = await __srcMap.get(cacheKey);
+    const { timestamp } = await iepSrc.get(cacheKey);
     if (timestamp > iep.timestamp) {
       return {
         source,
       };
     }
 
-    source = await resolver(source, pathname, iep.map);
-    __srcMap.set(cacheKey, { source });
+    source = await resolver(source, ticket, pathname, iep.map);
 
     return {
       source,
