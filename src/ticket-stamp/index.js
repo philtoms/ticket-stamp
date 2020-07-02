@@ -4,9 +4,9 @@ import { fileURLToPath } from 'url';
 import bodyparser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import fileupload from 'express-fileupload';
+import cache from 'iep-cache';
 
 import iep from '../plugins/iep';
-import cache from '../plugins/iep/import-cache';
 import proxyMW from '../plugins/proxy-mw';
 import middleware from '../utils/middleware';
 import tsConfig from './config';
@@ -23,14 +23,15 @@ export default (options) => {
     routes,
     plugins,
     iep: { log },
+    'iep-cache': cacheOpts,
   } = config;
 
   const iepMap = cache('iepMap', {
+    ...cacheOpts,
     defaults: { prod: [] },
-    persist: true,
   });
 
-  const { load, bind } = middleware(config, [
+  const { load, bind } = middleware({ ...config, iepMap }, [
     path.resolve(__dirname, '../plugins'),
   ]);
 
@@ -68,7 +69,7 @@ export default (options) => {
     const { middleware, render } = iep(config);
     stamp.use(`${routes.src}/*`, middleware);
     if (proxy) {
-      stamp.use(proxyMW({ log, cache }, proxy, render));
+      stamp.use(proxyMW({ ...config, iepMap }, proxy, render));
     }
   });
 

@@ -1,9 +1,9 @@
 import fs from 'fs';
 import { dirname } from 'path';
+import cache, { IEP_STR } from 'iep-cache';
 import resolve from './resolver';
-import cache, { IEP_STR } from './import-cache';
 
-export default (clientEntry, log) => {
+export default ({ clientEntry, log, errors }) => {
   const srcPath = dirname(clientEntry);
   const iepMap = cache('iepMap');
   const iepSrc = cache('iepSrc');
@@ -11,26 +11,26 @@ export default (clientEntry, log) => {
   return async (req, res) => {
     try {
       const [, ticket] = (req.cookies.stamp || '').split('=');
-      const path = `${srcPath}/${req.params[0]}`;
+      const pathname = `${srcPath}/${req.params[0]}`;
       res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
 
       const iep = (await iepMap.get(ticket)) ||
         (await iepMap.get('prod')[0]) || { map: {} };
 
-      const cacheKey = `${ticket}.${path}`;
+      const cacheKey = `${ticket}.${pathname}`;
       const cached = await iepSrc.get(cacheKey);
 
       if (cached.timestamp > iep.timestamp) {
         return res.send(cached[IEP_STR]);
       }
 
-      const source = fs.readFileSync(path, 'utf8');
-      resolve(source, ticket, path, iep.map).then((source) => {
+      const source = fs.readFileSync(pathname, 'utf8');
+      resolve(source, ticket, pathname, iep.map).then((source) => {
         res.send(source);
       });
     } catch (err) {
-      log.error('resolve', err);
-      res.status(500).send('Server error');
+      log.error('ts:resolve', err);
+      res.status(500).send(errors.PROD_500);
     }
   };
 };

@@ -3,14 +3,16 @@
 //    Do not rely on the API described below.
 // https://nodejs.org/api/esm.html#esm_code_resolve_code_hook
 import path from 'path';
+import cache, { IEP_STR } from 'iep-cache';
 import resolver from './resolver';
-import cache, { IEP_STR } from './import-cache';
 import { subscribe } from './utils/pubsub';
 
 const root = process.env.PWD;
 
+// cache options will be loaded in the iep-cache module scope, but overload
+// any defaults here.
 const iepMap = cache('iepMap');
-const iepSrc = cache('iepSrc');
+const iepSrc = cache('iepSrc', { 'cache-persist-url': 'false' });
 
 // pub-sub: subscribe to published entity updates
 subscribe('iepMap', iepMap.update, process);
@@ -30,14 +32,14 @@ export async function resolve(specifier, context, defaultResolve) {
     [, ticket] = extractIEP(context.parentURL);
   }
 
-  // fill in missing root for import-mapped specifiers of the form '/relative/path'
+  // fill in missing root for import-mapped specifiers of shape '/relative/path'
   if (ticket && specifier.startsWith('/') && !specifier.startsWith(root)) {
     specifier = path.resolve(root, specifier.substr(1));
   }
 
   const { url } = defaultResolve(specifier, context, defaultResolve);
 
-  // propagate ticket state through the tree
+  // propagate ticket state through the dependency tree
   return { url: ticket ? `${url}?__iep=${ticket}` : url };
 }
 

@@ -8,10 +8,15 @@ const clientEntry = path.resolve(rootPath, 'src/index.js');
 const stampedPath = path.resolve(rootPath, 'stamped');
 
 export default (config) => ({
-  iep: iepConfig({
-    persistRoot: stampedPath,
+  ...iepConfig({
     ...config.iep,
   }),
+  'iep-cache': {
+    'cache-persist-url': stampedPath,
+  },
+  errors: {
+    PROD_500: 'Sorry, something went wrong.',
+  },
   routes: {
     src: '/src',
     ...config.routes,

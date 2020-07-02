@@ -1,10 +1,6 @@
 import httpProxy from 'http-proxy';
 
-const PROD_500 = 'Sorry, something went wrong.';
-
-export default ({ log, cache }, options, render) => {
-  const proxy = httpProxy.createProxyServer(options);
-  const iepMap = cache('iepMap');
+export default ({ log, iepMap, errors }, options, render) => {
   // export a ticketed map to the application. Use prod until the ticket
   // is ready
   const validate = async (ticket, stage) => {
@@ -13,6 +9,7 @@ export default ({ log, cache }, options, render) => {
     return (await iepMap.get('prod'))[0];
   };
 
+  const proxy = httpProxy.createProxyServer(options);
   proxy.on('proxyRes', (proxyRes, req, res) => {
     const {
       headers: { referer },
@@ -41,9 +38,9 @@ export default ({ log, cache }, options, render) => {
               next();
             })
             .catch((err) => {
-              log.error('iep:proxy', err);
               res.end = _end;
-              return res.status(500).send(PROD_500);
+              if (err.message !== '500') log.error('iep:proxy', err);
+              return res.status(500).send(errors.PROD_500);
             });
         }
       };
@@ -75,7 +72,8 @@ export default ({ log, cache }, options, render) => {
 
       proxy.web(req, res, options.target);
     } catch (err) {
-      res.status(500).send(PROD_500);
+      if (err.message !== '500') log.error('iep:proxy', err);
+      res.status(500).send(errors.PROD_500);
     }
   };
 };
