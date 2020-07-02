@@ -12,66 +12,71 @@ export default (
   { defaults = {}, persist, persistRoot, persistKey, IEP_STR } = {},
   log
 ) => {
-  const persistData = (persistKey) => {
-    // key persistance overrides root option
-    const { persist = persistKey, path, data } = cache[entity];
-    if (path && persist) {
-      const json = persistKey
-        ? data[persistKey][IEP_STR] || JSON.stringify(data[persistKey])
-        : JSON.stringify(data);
+  try {
+    const persistData = (persistKey) => {
+      // key persistance overrides root option
+      const { persist = persistKey, path, data } = cache[entity];
+      if (path && persist) {
+        const json = persistKey
+          ? data[persistKey][IEP_STR] || JSON.stringify(data[persistKey])
+          : JSON.stringify(data);
 
-      const jsonPath = persistKey ? resolve(path, persistKey) : path;
-      fs.writeFile(jsonPath, json, (err) => {
-        if (err) {
-          return log.error(err);
-        }
-      });
-    }
-  };
-
-  const loadData = () => {
-    const { path } = cache[entity];
-    if (path && fs.existsSync(path)) {
-      const data = fs.readFileSync(path, 'utf8');
-      if (data) {
-        cache[entity].data = JSON.parse(data);
+        const jsonPath = persistKey ? resolve(path, persistKey) : path;
+        fs.writeFile(jsonPath, json, (err) => {
+          if (err) {
+            throw err;
+          }
+        });
       }
-    }
-  };
+    };
 
-  const get = (key) => cache[entity].data[key] || false;
+    const loadData = () => {
+      const { path } = cache[entity];
+      if (path && fs.existsSync(path)) {
+        const data = fs.readFileSync(path, 'utf8');
+        if (data) {
+          cache[entity].data = JSON.parse(data);
+        }
+      }
+    };
 
-  const getAll = () => Object.entries(cache[entity]).map(({ data }) => data);
+    const get = (key) => cache[entity].data[key] || false;
 
-  const set = (key, value) => {
-    cache[entity].data[key] = { ...value, timestamp: Date.now() };
-    persistData(persistKey && key);
-  };
+    const getAll = () => Object.entries(cache[entity]).map(({ data }) => data);
 
-  const remove = (key) => {
-    Reflect.deleteProperty(cache[entity], key);
-    persistData(persistKey && key);
-  };
+    const set = (key, value) => {
+      cache[entity].data[key] = { ...value, timestamp: Date.now() };
+      persistData(persistKey && key);
+    };
 
-  const update = (message) => {
-    message.set && set(...message.set);
-    message.remove && remove(...message.remove);
-  };
+    const remove = (key) => {
+      Reflect.deleteProperty(cache[entity], key);
+      persistData(persistKey && key);
+    };
 
-  cache[entity] = cache[entity] || {
-    data: defaults,
-    persist,
-    path: resolve(persistRoot, persistKey ? '' : `${entity}.json`),
-  };
+    const update = (message) => {
+      message.set && set(...message.set);
+      message.remove && remove(...message.remove);
+    };
 
-  // key persisted data is loaded on demand
-  if (!persistKey) loadData();
+    cache[entity] = cache[entity] || {
+      data: defaults,
+      persist,
+      path: resolve(persistRoot, persistKey ? '' : `${entity}.json`),
+    };
 
-  return {
-    get,
-    getAll,
-    set,
-    remove,
-    update,
-  };
+    // key persisted data is loaded on demand
+    if (!persistKey) loadData();
+
+    return {
+      get,
+      getAll,
+      set,
+      remove,
+      update,
+    };
+  } catch (err) {
+    log.error('iep:local-cache', err);
+    throw new Error('500');
+  }
 };

@@ -1,5 +1,7 @@
 import httpProxy from 'http-proxy';
 
+const PROD_500 = 'Sorry, something went wrong.';
+
 export default ({ log, cache }, options, render) => {
   const proxy = httpProxy.createProxyServer(options);
   const iepMap = cache('iepMap');
@@ -39,9 +41,9 @@ export default ({ log, cache }, options, render) => {
               next();
             })
             .catch((err) => {
-              log.error('iep-proxy', err);
+              log.error('iep:proxy', err);
               res.end = _end;
-              return res.status(500).send('Something went wrong');
+              return res.status(500).send(PROD_500);
             });
         }
       };
@@ -49,27 +51,31 @@ export default ({ log, cache }, options, render) => {
   });
 
   return async (req, res, next) => {
-    const {
-      url,
-      query: { qa, dev },
-      headers: { referer },
-    } = req;
-    const ticket = qa || dev;
-    const stage = (qa && 'qa') || (dev && 'dev');
-    const iep = await validate(ticket, stage);
+    try {
+      const {
+        url,
+        query: { qa, dev },
+        headers: { referer },
+      } = req;
+      const ticket = qa || dev;
+      const stage = (qa && 'qa') || (dev && 'dev');
+      const iep = await validate(ticket, stage);
 
-    req.stamp.context = {
-      ticket,
-      stage,
-      iep,
-      next,
-    };
+      req.stamp.context = {
+        ticket,
+        stage,
+        iep,
+        next,
+      };
 
-    // block all upstream js requests
-    const block = referer && iep && url.endsWith('.js');
+      // block all upstream js requests
+      const block = referer && iep && url.endsWith('.js');
 
-    if (block) return next();
+      if (block) return next();
 
-    proxy.web(req, res, options.target);
+      proxy.web(req, res, options.target);
+    } catch (err) {
+      res.status(500).send(PROD_500);
+    }
   };
 };
