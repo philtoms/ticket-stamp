@@ -36,7 +36,7 @@ export const restart = (ticket) => {
       loaderHooks,
       '--experimental-specifier-resolution=node',
       '--no-warnings',
-      // '--inspect-brk=localhost:9222',
+      '--inspect-brk=localhost:9222',
     ],
   });
 

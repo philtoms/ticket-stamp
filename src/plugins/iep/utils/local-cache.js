@@ -7,40 +7,50 @@ const __CACHE = Symbol('import-cache');
 globalThis[__CACHE] = globalThis[__CACHE] || {};
 const cache = globalThis[__CACHE];
 
-const persistData = (entity) => {
-  const { persist, path, data } = cache[entity];
-  if (persist && path) {
-    fs.writeFile(path, JSON.stringify(data), (err) => {
-      if (err) {
-        return console.error(err);
-      }
-    });
-  }
-};
+export default (
+  entity,
+  { defaults = {}, persist, persistRoot, persistKey, IEP_STR } = {},
+  log
+) => {
+  const persistData = (persistKey) => {
+    // key persistance overrides root option
+    const { persist = persistKey, path, data } = cache[entity];
+    if (path && persist) {
+      const json = persistKey
+        ? data[persistKey][IEP_STR] || JSON.stringify(data[persistKey])
+        : JSON.stringify(data);
 
-const loadData = (entity) => {
-  const { path } = cache[entity];
-  if (path && fs.existsSync(path)) {
-    const data = fs.readFileSync(path, 'utf8');
-    if (data) {
-      cache[entity].data = JSON.parse(data);
+      const jsonPath = persistKey ? resolve(path, persistKey) : path;
+      fs.writeFile(jsonPath, json, (err) => {
+        if (err) {
+          return log.error(err);
+        }
+      });
     }
-  }
-};
+  };
 
-export default (entity, { defaults = {}, persist, persistRoot } = {}) => {
+  const loadData = () => {
+    const { path } = cache[entity];
+    if (path && fs.existsSync(path)) {
+      const data = fs.readFileSync(path, 'utf8');
+      if (data) {
+        cache[entity].data = JSON.parse(data);
+      }
+    }
+  };
+
   const get = (key) => cache[entity].data[key] || false;
 
   const getAll = () => Object.entries(cache[entity]).map(({ data }) => data);
 
   const set = (key, value) => {
     cache[entity].data[key] = { ...value, timestamp: Date.now() };
-    persistData(entity);
+    persistData(persistKey && key);
   };
 
   const remove = (key) => {
     Reflect.deleteProperty(cache[entity], key);
-    persistData(entity);
+    persistData(persistKey && key);
   };
 
   const update = (message) => {
@@ -51,13 +61,13 @@ export default (entity, { defaults = {}, persist, persistRoot } = {}) => {
   cache[entity] = cache[entity] || {
     data: defaults,
     persist,
-    path: resolve(persistRoot, `${entity}.json`),
+    path: resolve(persistRoot, persistKey ? '' : `${entity}.json`),
   };
 
-  loadData(entity);
+  // key persisted data is loaded on demand
+  if (!persistKey) loadData();
 
   return {
-    persistRoot,
     get,
     getAll,
     set,

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { dirname } from 'path';
 import resolve from './resolver';
-import cache from './import-cache';
+import cache, { IEP_STR } from './import-cache';
 
 export default (clientEntry, log) => {
   const srcPath = dirname(clientEntry);
@@ -21,7 +21,7 @@ export default (clientEntry, log) => {
       const cached = await iepSrc.get(cacheKey);
 
       if (cached.timestamp > iep.timestamp) {
-        return res.send(cached.source);
+        return res.send(cached[IEP_STR]);
       }
 
       const source = fs.readFileSync(path, 'utf8');

@@ -1,10 +1,12 @@
 import fs from 'fs';
 import ImportMap from '../utils/import-map';
 import stamp from '../utils/stamp';
+import cache, { IEP_STR } from '../plugins/iep/import-cache';
 
 export default ({ iep: { log }, stampedPath }, iepMap) => {
   const iepRoot = '/' + stampedPath.split('/').pop();
   const stampRoot = stampedPath.replace(iepRoot, '');
+  const srcMap = cache('srcMap', { persistKey: true });
   return async (req, res) => {
     try {
       const { ticket } = req.params;
@@ -20,7 +22,8 @@ export default ({ iep: { log }, stampedPath }, iepMap) => {
         }
         const iepName = `${iepRoot}/${name}.${md5}.${type}`;
         const iepPath = `${stampRoot}${iepName}`;
-        fs.writeFileSync(iepPath, data);
+        srcMap.set(iepPath, { [IEP_STR]: data });
+        // fs.writeFileSync(iepPath, data);
         // Will probably split into SSR and CSR imports
         const alias = type === 'js' ? name : `${name}.${type}`;
 

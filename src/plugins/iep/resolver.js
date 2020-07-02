@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { init, parse } from 'es-module-lexer/dist/lexer';
 
+import { IEP_STR } from './import-cache';
 import { publish } from './utils/pubsub';
 
 const fsPath = (pathname, root) => {
@@ -74,6 +75,6 @@ export default async (source, ticket, pathname, map, baseDir = srcDir) => {
   }, source);
 
   const cacheKey = `${ticket}.${pathname}`;
-  publish('iepSrc', { set: [cacheKey, { source: resolved }] });
+  publish('iepSrc', { set: [cacheKey, { [IEP_STR]: resolved }] });
   return resolved;
 };

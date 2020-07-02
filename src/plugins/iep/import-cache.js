@@ -2,7 +2,8 @@ import { resolve } from 'path';
 
 const root = process.env.PWD;
 const configPath = process.env.CONFIG || resolve(root, 'iep-config.js');
-const cachePath = process.env.CACHE || resolve(root, 'stamped');
+
+export const IEP_STR = Symbol('iep-source');
 
 // lazy load the config after the pre-loader cycle has completed.
 // Otherwise the dynamic import will force create a bogus singleton.
@@ -12,12 +13,18 @@ export default (entity, opts = {}) => {
     loaded ||
     (loaded = import(configPath).then((module) => {
       const {
-        iep: { cache, persistRoot = cachePath },
+        iep: { cache, persistRoot, log },
       } = module.default;
-      return cache(entity, {
-        ...opts,
-        persistRoot,
-      });
+      return cache(
+        entity,
+        {
+          ...opts,
+          IEP_STR,
+          persistRoot:
+            process.env.CACHE || persistRoot || resolve(root, 'stamped'),
+        },
+        log
+      );
     }));
 
   return {

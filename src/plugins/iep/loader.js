@@ -4,7 +4,7 @@
 // https://nodejs.org/api/esm.html#esm_code_resolve_code_hook
 import path from 'path';
 import resolver from './resolver';
-import cache from './import-cache';
+import cache, { IEP_STR } from './import-cache';
 import { subscribe } from './utils/pubsub';
 
 const root = process.env.PWD;
@@ -47,7 +47,7 @@ export async function getSource(url, context, defaultGetSource) {
     const cacheKey = `${ticket}.${pathname}`;
 
     const iep = await iepMap.get(ticket);
-    const { timestamp, source } = await iepSrc.get(cacheKey, iep);
+    const { timestamp, [IEP_STR]: source } = await iepSrc.get(cacheKey, iep);
     if (timestamp > iep.timestamp) {
       return {
         source,
