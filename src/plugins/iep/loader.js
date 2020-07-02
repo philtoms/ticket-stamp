@@ -3,8 +3,8 @@
 //    Do not rely on the API described below.
 // https://nodejs.org/api/esm.html#esm_code_resolve_code_hook
 import path from 'path';
+import cache, { IEP_STR } from 'iep-cache';
 import resolver from './resolver';
-import cache, { IEP_STR } from './iep-cache';
 import { subscribe } from './utils/pubsub';
 
 const root = process.env.PWD;

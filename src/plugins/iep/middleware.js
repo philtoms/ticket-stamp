@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { dirname } from 'path';
+import cache, { IEP_STR } from 'iep-cache';
 import resolve from './resolver';
-import cache, { IEP_STR } from './iep-cache';
 
 export default ({ clientEntry, log, errors }) => {
   const srcPath = dirname(clientEntry);

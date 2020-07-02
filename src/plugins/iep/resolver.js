@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { init, parse } from 'es-module-lexer/dist/lexer';
+import { IEP_STR } from 'iep-cache';
 
-import { IEP_STR } from './iep-cache';
 import { publish } from './utils/pubsub';
 
 const fsPath = (pathname, root) => {

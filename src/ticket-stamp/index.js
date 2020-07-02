@@ -4,9 +4,9 @@ import { fileURLToPath } from 'url';
 import bodyparser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import fileupload from 'express-fileupload';
+import cache from 'iep-cache';
 
 import iep from '../plugins/iep';
-import cache from '../plugins/iep/iep-cache';
 import proxyMW from '../plugins/proxy-mw';
 import middleware from '../utils/middleware';
 import tsConfig from './config';

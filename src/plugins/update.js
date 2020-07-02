@@ -1,6 +1,6 @@
+import cache, { IEP_STR } from 'iep-cache';
 import ImportMap from '../utils/import-map';
 import stamp from '../utils/stamp';
-import cache, { IEP_STR } from '../plugins/iep/iep-cache';
 
 export default ({ iep: { log }, stampedPath }, iepMap) => {
   const iepRoot = '/' + stampedPath.split('/').pop();

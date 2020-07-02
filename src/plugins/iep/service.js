@@ -1,8 +1,8 @@
 import { fork } from 'child_process';
 import { fileURLToPath } from 'url';
 import path, { dirname } from 'path';
+import cache from 'iep-cache';
 
-import cache from './iep-cache';
 import { subscribe } from './utils/pubsub';
 
 const root = process.env.PWD;
