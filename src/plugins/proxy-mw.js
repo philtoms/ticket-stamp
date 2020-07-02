@@ -30,17 +30,19 @@ export default ({ log, cache }, options, render) => {
         data = data.toString('utf-8');
         body += data;
         if (data.includes('</html>')) {
-          try {
-            // render the body using the ticketed entry point
-            render(ticket, body).then((buffer) => {
+          // render the body using the ticketed entry point
+          render(ticket, body)
+            .then((buffer) => {
               req.stamp.buffer = buffer;
               res.end = _end;
               if (options.inject) return res.end(options.inject(buffer));
               next();
+            })
+            .catch((err) => {
+              log.error('iep-proxy', err);
+              res.end = _end;
+              return res.status(500).send('Something went wrong');
             });
-          } catch (err) {
-            log.error(err);
-          }
         }
       };
     }

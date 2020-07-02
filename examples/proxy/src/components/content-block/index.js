@@ -10,6 +10,8 @@ export default ({
   <div class="styles__Description-sc-1nccejw-2 iqzpUn">
     <div class="styles__StyledRichText-sc-1s2uhl-0 jrrOZe">
     <p>${description}</p>
+    <p>${description}</p>
+    <p>${description}</p>
     </div>
   </div>
 </div>
