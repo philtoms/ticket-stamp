@@ -4,22 +4,19 @@ import cache, { IEP_STR } from 'iep-cache';
 import resolve from './resolver';
 import cookies from './utils/cookies';
 
-export default ({ clientEntry, log, errors, ['iep-cache']: iepCache }) => {
+export default ({ clientEntry, log, errors }, filter) => {
   const srcPath = dirname(clientEntry);
-  const iepMap = cache('iepMap', iepCache);
   const iepSrc = cache('iepSrc');
   const parseCookies = cookies();
 
-  return async (req, res, next) => {
+  return async (req, res) => {
     try {
       res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
 
       const pathname = `${srcPath}/${req.params[0]}`;
 
       const { ticket } = parseCookies(req);
-
-      const iep = (await iepMap.get(ticket)) ||
-        (await iepMap.get('prod')[0]) || { map: {} };
+      const { iep } = await filter.ticket(ticket);
 
       const cacheKey = `${ticket}.${pathname}`;
       const cached = await iepSrc.get(cacheKey);

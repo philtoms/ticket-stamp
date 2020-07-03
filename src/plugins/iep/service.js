@@ -13,7 +13,7 @@ const workerService = path.resolve(__dirname, 'worker.js');
 const loaderHooks = path.resolve(__dirname, 'loader.js');
 
 const serviceMap = {};
-let workerSequenceNo = 0;
+let workerSequenceNo = 1;
 
 // this is a worker process
 if (process.argv.includes(workerService)) {
@@ -39,7 +39,7 @@ export const restart = (ticket, conf) => {
         '--experimental-loader',
         loaderHooks,
         '--experimental-specifier-resolution=node',
-        '--no-warnings',
+        // '--no-warnings',
         // '--inspect-brk=localhost:9222',
       ],
     }

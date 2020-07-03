@@ -20,11 +20,18 @@ export default tsConfig({
   // log,
   iep: {
     proxy: {
+      env: '*',
       changeOrigin: true,
       headers: {
         'accept-encoding': 'identity',
       },
       target: process.env.TARGET,
+    },
+    // stages and stage types: ticket or indexed entry point (head=0)
+    stages: {
+      dev: 'ticket',
+      qa: 'ticket',
+      prod: 'head',
     },
   },
   plugins: {

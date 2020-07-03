@@ -4,7 +4,7 @@ import service from './service';
 export default (config, filter) => async (req, res, next) => {
   const body = req.body;
   const { log, errors, serverEntry, ['iep-cache']: iepConf } = config;
-  const { ticket } = req.iep.context || (await filter(req));
+  const { ticket } = req.iep.context || (await filter.stage(req));
   const { worker, requestId } = service(ticket, iepConf);
   worker.send({ ticket, serverEntry, body, requestId });
   worker.on('message', ({ responseId, buffer, err }) => {

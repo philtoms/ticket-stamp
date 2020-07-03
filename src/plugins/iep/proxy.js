@@ -47,8 +47,7 @@ export default (config, filter) => {
 
   return async (req, res, next) => {
     try {
-      const { ticket, stage } = await filter(req);
-
+      const { ticket, stage } = await filter.stage(req);
       req.iep = {
         ...req.iep,
         context: {
