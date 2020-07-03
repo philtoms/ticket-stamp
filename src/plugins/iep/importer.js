@@ -4,7 +4,7 @@ import cache, { IEP_STR } from 'iep-cache';
 import resolve from './resolver';
 import cookies from './utils/cookies';
 
-export default ({ clientEntry, log, errors }, filter) => {
+export default ({ iep: { clientEntry }, log, errors }, filter) => {
   const srcPath = dirname(clientEntry);
   const iepSrc = cache('iepSrc');
   const parseCookies = cookies();

@@ -23,6 +23,7 @@ export default (iepMap, stages) => {
       // is there an indexed iep?
       return api.index(indexType) || {};
     },
+
     ticket: async (ticket) => {
       const iep = await iepMap.get(ticket);
       if (iep) {
@@ -36,6 +37,7 @@ export default (iepMap, stages) => {
       // is there an indexed iep?
       return api.index(indexType) || {};
     },
+
     index: async (type) => {
       // only head supported as yet
       if (indexType === 'head') {

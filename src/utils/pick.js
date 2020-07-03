@@ -10,4 +10,4 @@ const pick = (obj, [head, ...tail]) => {
   }
 };
 
-export default (obj, path) => pick(obj, path.split('/'));
+export default (obj, path) => pick(obj, path.split('.'));

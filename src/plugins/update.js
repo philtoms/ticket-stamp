@@ -2,7 +2,10 @@ import cache, { IEP_STR } from 'iep-cache';
 import ImportMap from '../utils/import-map';
 import stamp from '../utils/stamp';
 
-export default ({ iep: { log }, stampedPath }, iepMap) => {
+export default (
+  { 'iep-cache': { 'cache-persist-url': stampedPath }, log },
+  iepMap
+) => {
   const iepRoot = '/' + stampedPath.split('/').pop();
   const stampRoot = stampedPath.replace(iepRoot, '');
   const srcMap = cache('srcMap', { 'cache-persist-key': true });
