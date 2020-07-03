@@ -1,11 +1,18 @@
-import middleware from './middleware';
-import render from './render';
-import applyDefaults from './config';
+import cache from 'iep-cache';
+import importer from './importer';
+import renderer from './renderer';
+import proxy from './proxy';
+import defaultFilter from './utils/default-filter';
 
 export default (config) => {
-  const iepConf = applyDefaults(config);
+  const iepMap = cache('iepMap', config['iep-cache']);
+  const filter = (config.iep.filter || defaultFilter)(iepMap);
+
   return {
-    render: render(iepConf),
-    middleware: middleware(iepConf),
+    filter,
+    iepMap,
+    render: renderer(config, filter),
+    proxy: proxy(config, filter),
+    imports: importer(config, filter),
   };
 };

@@ -18,7 +18,7 @@ const log = new winston.createLogger(myWinstonOptions);
 
 export default tsConfig({
   // log,
-  plugins: {
+  iep: {
     proxy: {
       changeOrigin: true,
       headers: {
@@ -26,6 +26,8 @@ export default tsConfig({
       },
       target: process.env.TARGET,
     },
+  },
+  plugins: {
     'jira-webhook': {
       mount: {
         method: 'POST',

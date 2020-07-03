@@ -32,7 +32,8 @@ export default async (source, ticket, pathname, map, baseDir = srcDir) => {
     if (d !== -1) return acc;
     let specifier = acc.substring(s, e);
     const selector = specifier.replace('/index.js', '').split('/').pop();
-    const mappedSelector = map.imports[specifier] || map.imports[selector];
+    const mappedSelector =
+      map.imports && (map.imports[specifier] || map.imports[selector]);
     if (mappedSelector) {
       specifier = mappedSelector;
     } else {

@@ -55,7 +55,6 @@ export async function getSource(url, context, defaultGetSource) {
         source,
       };
     }
-
     const src = iep.map.imports[pathname];
     if (src) {
       url = 'file:///' + src;

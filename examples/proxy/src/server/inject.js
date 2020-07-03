@@ -34,7 +34,7 @@ const injectScript = (buffer) => {
 };
 
 export default (req, res, next) => {
-  const buffer = req.stamp.buffer;
+  const buffer = req.body;
   if (!buffer) return next();
   res.send(pipe([injectScript, injectStyle, injectHtml])(buffer));
 };

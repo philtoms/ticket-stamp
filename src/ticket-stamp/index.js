@@ -6,25 +6,15 @@ import cookieParser from 'cookie-parser';
 import fileupload from 'express-fileupload';
 import cache from 'iep-cache';
 
-import iep from '../plugins/iep';
-import proxyMW from '../plugins/proxy-mw';
 import middleware from '../utils/middleware';
-import tsConfig from './config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const stamp = express();
 
-export default (options) => {
-  const config = tsConfig(options);
-
-  const {
-    routes,
-    plugins,
-    iep: { log },
-    'iep-cache': cacheOpts,
-  } = config;
+export default (config) => {
+  const { plugins, 'iep-cache': cacheOpts } = config;
 
   const iepMap = cache('iepMap', {
     ...cacheOpts,
@@ -51,7 +41,7 @@ export default (options) => {
     next();
   });
 
-  const { pipeline, proxy, ...rest } = plugins;
+  const { pipeline, ...rest } = plugins;
 
   // Stamp Cli API
   stamp.get('/stamp/list', bind('list', pipeline.list, iepMap));
@@ -64,14 +54,7 @@ export default (options) => {
   stamp.put('/stamp/:ticket', bind('update', pipeline.update, iepMap));
   stamp.post('/stamp', bind('register', pipeline.register, iepMap));
 
-  load(stamp, rest, iepMap).then(() => {
-    // IEP middleware
-    const { middleware, render } = iep(config);
-    stamp.use(`${routes.src}/*`, middleware);
-    if (proxy) {
-      stamp.use(proxyMW({ ...config, iepMap }, proxy, render));
-    }
-  });
+  load(stamp, rest, iepMap);
 
   return stamp;
 };
