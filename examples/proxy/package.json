@@ -2,7 +2,7 @@
   "name": "proxy",
   "version": "1.0.0",
   "type": "module",
-  "description": "This example defers all script handling to `ticket-stamp` middleware",
+  "description": "A proxy `ticket-stamp` middleware",
   "scripts": {
     "start": "node --experimental-specifier-resolution=node index.js",
     "stamp": "node --experimental-specifier-resolution=node ../../stamp"
@@ -10,7 +10,9 @@
   "dependencies": {
     "compression": "^1.7.4",
     "express": "^4.17.1",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "iep": "philtoms/iep",
+    "iepcache": "philtoms/iep-cache"
   },
   "author": "",
   "license": "ISC"

@@ -1,12 +1,5 @@
-import winston from 'winston';
 import tsConfig from '../../src/ticket-stamp/config';
-import iepConfig from '../../src/plugins/iep/config';
-
-const consoleTransport = new winston.transports.Console();
-const myWinstonOptions = {
-  transports: [consoleTransport],
-};
-const log = new winston.createLogger(myWinstonOptions);
+import { config as iepConfig } from 'iep';
 
 export default iepConfig(
   tsConfig({

@@ -8,7 +8,7 @@ export default (
 ) => {
   const iepRoot = '/' + stampedPath.split('/').pop();
   const stampRoot = stampedPath.replace(iepRoot, '');
-  const srcMap = cache('srcMap', { 'cache-persist-key': true });
+  const srcMap = cache('srcMap');
   return async (req, res) => {
     try {
       const { ticket } = req.params;
@@ -25,10 +25,8 @@ export default (
         const iepName = `${iepRoot}/${name}.${md5}.${type}`;
         const iepPath = `${stampRoot}${iepName}`;
         srcMap.set(iepPath, { [IEP_STR]: data });
-        // fs.writeFileSync(iepPath, data);
-        // Will probably split into SSR and CSR imports
-        const alias = type === 'js' ? name : `${name}.${type}`;
 
+        const alias = type === 'js' ? name : `${name}.${type}`;
         const stamped = stamp({
           ...iep,
           id,

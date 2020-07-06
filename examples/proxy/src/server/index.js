@@ -2,15 +2,20 @@ import { fileURLToPath } from 'url';
 import path, { dirname } from 'path';
 import express from 'express';
 import compression from 'compression';
-//import cookieParser from 'cookie-parser';
+import winston from 'winston';
 
+import iep from 'iep';
 import inject from './inject';
 import ticketStamp from '../../../../src/ticket-stamp';
-import iep from '../../../../src/plugins/iep';
-import log from '../../../../src/plugins/iep/utils/local-log';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const consoleTransport = new winston.transports.Console();
+const myWinstonOptions = {
+  transports: [consoleTransport],
+};
+const log = new winston.createLogger(myWinstonOptions);
 
 export default (options) => {
   const config = { ...options, log };

@@ -1,4 +1,5 @@
-import iepConfig from './iep-config';
+import config from './config';
 import server from './src/server';
-console.log(iepConfig);
-server(iepConfig);
+
+console.log(config);
+server(config);

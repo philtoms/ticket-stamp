@@ -1,9 +1,9 @@
-export default ({ iep: { log } }, iepMap) => async (req, res) => {
+export default ({ log }, iepMap) => async (req, res) => {
   try {
     const { stage } = req.query;
     const tickets = await iepMap.getAll();
     res.send(
-      tickets
+      Object.entries(tickets)
         .filter(([ticket]) => !stage || ticket.startsWith(stage))
         .reduce(
           (acc, [ticket, data]) => ({
@@ -14,7 +14,7 @@ export default ({ iep: { log } }, iepMap) => async (req, res) => {
         )
     );
   } catch (err) {
-    log.error(err);
+    log.error('ts:list', err);
     res.status(500).send('Server error');
   }
 };
