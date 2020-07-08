@@ -42,9 +42,8 @@ export default iepConfig(
           Done: 'prod',
         },
       },
-      pipeline: {
-        promote: ['git-policy', 'promote'],
-      },
+      // shorthand
+      promote: ['git-policy', 'promote'],
     },
   })
 );
