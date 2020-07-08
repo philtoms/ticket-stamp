@@ -28,7 +28,6 @@ export default (options) => {
   const { imports, proxy, render } = iep(config);
 
   app.use(compression());
-  // app.use(cookieParser());
 
   // ticket stamp
   app.use('/stamped', express.static(stampedPath));
@@ -38,6 +37,24 @@ export default (options) => {
   // iep
   app.use('/src/*', imports);
   app.use('/', proxy, render, inject);
+
+  // end of pipeline
+  // result:
+  //  status: default 500
+  //  message: default empty
+  //  payload: default empty
+  app.use((result, req, res, next) => {
+    const { status = 500, message = '', payload = '' } = result;
+    if (status === 500) {
+      const err = result instanceof Error ? result : message;
+      log.error(err.stack || err);
+      return res.status(500).send(payload);
+    }
+
+    if (message) {
+      log[status >= 400 ? 'warn' : 'info'](message);
+    }
+  });
 
   const listener = app.listen(process.env.PORT || 8080, () => {
     console.log('Your app is listening on port ' + listener.address().port);
