@@ -22,7 +22,7 @@ export default ({ iepMap }) => async (req, res, next) => {
       prod.filter((entry) => entry.ticket !== ticket)
     );
     iepMap.set(ticket, stamped);
-    return next({ payload: stamped, message: stamped });
+    return next({ status: 200, payload: stamped, message: stamped });
   }
 
   const iep = await iepMap.get(ticket);
@@ -35,7 +35,7 @@ export default ({ iepMap }) => async (req, res, next) => {
       status: 'reverted',
     });
     iepMap.set(ticket, stamped);
-    return next({ payload: stamped, message: stamped });
+    return next({ status: 200, payload: stamped, message: stamped });
   }
   res.status(404).send(`unrecognized ticket ${ticket}`);
 };

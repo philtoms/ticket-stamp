@@ -5,6 +5,7 @@ import compression from 'compression';
 import winston from 'winston';
 
 import iep from 'iep';
+import { errorHandler } from 'iep-middleware';
 import inject from './inject';
 import ticketStamp from '../../../../src/ticket-stamp';
 
@@ -39,22 +40,7 @@ export default (options) => {
   app.use('/', proxy, render, inject);
 
   // end of pipeline
-  // result:
-  //  status: default 500
-  //  message: default empty
-  //  payload: default empty
-  app.use((result, req, res, next) => {
-    const { status = 500, message = '', payload = '' } = result;
-    if (status === 500) {
-      const err = result instanceof Error ? result : message;
-      log.error(err.stack || err);
-      return res.status(500).send(payload);
-    }
-
-    if (message) {
-      log[status >= 400 ? 'warn' : 'info'](message);
-    }
-  });
+  app.use(errorHandler({ log }), (err, req, res, next) => {});
 
   const listener = app.listen(process.env.PORT || 8080, () => {
     console.log('Your app is listening on port ' + listener.address().port);

@@ -14,15 +14,13 @@ export default ({ iepMap }) => async (req, res, next) => {
 
   const prod = await iepMap.get('prod');
   const prodTicket = prod && prod.find((entry) => entry.ticket === ticket);
+  const iepTicket = prodTicket || (await iepMap.get(ticket));
+
   // don't overwrite existing ticket work
-  // - use update to do that
-  if (prodTicket) {
-    return next({ payload: `unchanged ticket ${ticket}` });
+  if (iepTicket) {
+    next({ status: 201, payload: { [ticket]: 'Already stamped' } });
   }
-  const iep = await iepMap.get(ticket);
-  if (iep) {
-    return next({ payload: `unchanged ticket ${ticket}` });
-  }
+
   const stamped = stamp({
     id,
     user,

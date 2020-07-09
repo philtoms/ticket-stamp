@@ -8,7 +8,7 @@ export default (action, url, method, body, verbose) =>
   })
     .then(async (res) => ({
       status: res.status,
-      body: await (res.status <= 201 ? res.json() : res.text()),
+      body: await res.json(),
     }))
     .then(({ status, body }) => {
       log(action, status, verbose ? JSON.stringify(body, null, 2) : '');

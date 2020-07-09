@@ -4,8 +4,7 @@ import { fileURLToPath } from 'url';
 import bodyparser from 'body-parser';
 import fileupload from 'express-fileupload';
 import cache from 'iep-cache';
-
-import middleware from '../iep-middleware';
+import middleware from 'iep-middleware';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,9 +19,13 @@ export default (config) => {
     defaults: { prod: [] },
   });
 
-  const { load, bind } = middleware({ ...config, iepMap, ctx: 'stamp' }, [
-    path.resolve(__dirname, '../plugins'),
-  ]);
+  const paths = [path.resolve(__dirname, '../plugins')];
+  const { load, bind } = middleware({
+    ...config,
+    iepMap,
+    paths,
+    ctx: 'stamp',
+  });
 
   stamp.use(bodyparser.urlencoded({ extended: true }));
   stamp.use(bodyparser.json());

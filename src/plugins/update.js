@@ -24,7 +24,7 @@ export default ({
       }
       const iepName = `${iepRoot}/${name}.${md5}.${type}`;
       const iepPath = `${stampRoot}${iepName}`;
-      srcMap.set(iepPath, { [IEP_STR]: data });
+      srcMap.set(iepPath, { [IEP_STR]: data.toString() });
 
       const alias = type === 'js' ? name : `${name}.${type}`;
       const stamped = stamp({
@@ -35,7 +35,7 @@ export default ({
         files: [...(iep.files || []).filter((file) => file !== alias), alias],
       });
       iepMap.set(ticket, stamped);
-      return next({ payload: stamped, message: stamped });
+      return next({ status: 200, payload: stamped, message: stamped });
     }
     res.status(404).send(`unrecognized ticket ${ticket}`);
   };

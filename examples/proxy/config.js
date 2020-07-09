@@ -28,7 +28,7 @@ export default iepConfig(
     plugins: {
       'jira-webhook': {
         method: 'POST',
-        path: '/webhooks/jira',
+        route: '/webhooks/jira',
         issueKeys: {
           user: 'user.displayName',
           ticket: 'issue.key',
