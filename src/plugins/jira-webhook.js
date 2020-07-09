@@ -11,10 +11,8 @@ const stageIdx = {
   prod: 3,
 };
 
-export default (config, { workflowMap, issueKeys }, iepMap) => {
-  const {
-    iep: { log },
-  } = config;
+export default (options) => {
+  const { iepMap, workflowMap, issueKeys, log } = options;
 
   const handler = async (req, res, next) => {
     const webHookId = req.get('X-Atlassian-Webhook-Identifier');
@@ -25,7 +23,7 @@ export default (config, { workflowMap, issueKeys }, iepMap) => {
     const done = pick(req.body, issueKeys.done);
 
     if (webhookEvent === 'jira:issue_created') {
-      return register(config, iepMap)(
+      return register(options)(
         { body: { ticket }, stamp: { user, id: webHookId } },
         res,
         next
@@ -44,7 +42,7 @@ export default (config, { workflowMap, issueKeys }, iepMap) => {
 
       if (
         !iep &&
-        (await register(config, iepMap)(
+        (await register(options)(
           { body: { ticket }, stamp: { user, id: webHookId } },
           localRes(),
           next
@@ -56,7 +54,7 @@ export default (config, { workflowMap, issueKeys }, iepMap) => {
       if (iep) {
         if (iep.id === webHookId) return res.send(200);
         if (stageIdx[stage] > stageIdx[iep.stage])
-          return promote(config, iepMap)(
+          return promote(options)(
             {
               params: { ticket },
               stamp: { user, stage, id: webHookId, done },
@@ -66,7 +64,7 @@ export default (config, { workflowMap, issueKeys }, iepMap) => {
           );
 
         if (stageIdx[stage] < stageIdx[iep.stage])
-          return revert(config, iepMap)(
+          return revert(options)(
             {
               params: { ticket },
               stamp: { user, stage, id: webHookId },
@@ -75,7 +73,7 @@ export default (config, { workflowMap, issueKeys }, iepMap) => {
             next
           );
 
-        return res.status(202).send(`unchanged ticket ${ticket}`);
+        return res.status(200).send(`unchanged ticket ${ticket}`);
       }
       // do nothing but log
       log.warn('webhooks/jira', `unrecognized ticket ${ticket}`);
@@ -83,12 +81,13 @@ export default (config, { workflowMap, issueKeys }, iepMap) => {
     }
 
     if (webhookEvent === 'jira:issue_deleted') {
-      return remove(config, iepMap)(
+      return remove(options)(
         { params: { ticket }, stamp: { user, id: webHookId } },
         res,
         next
       );
     }
+    next();
   };
   return handler;
 };

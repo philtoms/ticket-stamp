@@ -71,13 +71,7 @@ export const revert = (verbose) => {
 };
 
 export const close = (verbose) => {
-  return fetch(
-    'remove',
-    `${iepServer}/${ticketId}/remove`,
-    'PUT',
-    null,
-    verbose
-  );
+  return fetch('remove', `${iepServer}/${ticketId}`, 'DELETE', null, verbose);
 };
 
 export const list = (prod, qa, dev, verbose) => {

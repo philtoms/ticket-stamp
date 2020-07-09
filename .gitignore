@@ -1,6 +1,7 @@
 .DS_Store
 modules
 stamped
+iep-cache
 node_modules
 npm-debug.log
 .vscode
