@@ -1,14 +1,12 @@
-import cache, { IEP_STR } from 'iep-cache';
+import cache from 'iep-cache';
 import ImportMap from '../utils/import-map';
 import stamp from '../utils/stamp';
 
-export default ({
-  iepMap,
-  'iep-cache': { 'cache-persist-url': stampedPath },
-}) => {
+export default ({ iepMap, iepCache }) => {
+  const srcMap = cache('srcMap', iepCache);
+  const { '--cache-persist-url': stampedPath } = iepCache;
   const iepRoot = '/' + stampedPath.split('/').pop();
   const stampRoot = stampedPath.replace(iepRoot, '');
-  const srcMap = cache('srcMap');
 
   return async (req, res, next) => {
     const { ticket } = req.params;
@@ -23,8 +21,8 @@ export default ({
           .send(`ticket ${ticket} is already at ${iep.stage} stage`);
       }
       const iepName = `${iepRoot}/${name}.${md5}.${type}`;
-      const iepPath = `${stampRoot}${iepName}`;
-      srcMap.set(iepPath, { [IEP_STR]: data.toString() });
+      const srcPath = `${stampRoot}${iepName}`;
+      srcMap.set(srcPath, { source: data.toString() });
 
       const alias = type === 'js' ? name : `${name}.${type}`;
       const stamped = stamp({

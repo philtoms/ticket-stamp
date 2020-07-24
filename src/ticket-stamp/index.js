@@ -12,10 +12,10 @@ const __dirname = dirname(__filename);
 const stamp = express();
 
 export default (config) => {
-  const { plugins, 'iep-cache': cacheOpts } = config;
+  const { plugins, iepCache } = config;
 
   const iepMap = cache('iepMap', {
-    ...cacheOpts,
+    ...iepCache,
     defaults: { prod: [] },
   });
 

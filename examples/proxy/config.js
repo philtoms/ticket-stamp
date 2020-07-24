@@ -4,9 +4,9 @@ import { config as iepConfig } from 'iep';
 export default iepConfig(
   tsConfig({
     // log,
-    // 'iep-cache':{
-    //   'iep-persist-url: ./stamped'
-    // },
+    iepCache: {
+      '--srcMap-entity-key': 'source',
+    },
     iep: {
       proxy: {
         env: '*',

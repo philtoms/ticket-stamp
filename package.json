@@ -20,13 +20,12 @@
     "iep": "philtoms/iep",
     "iep-cache": "philtoms/iep-cache",
     "iep-middleware": "philtoms/iep-middleware",
-    "iep-pubsub": "philtoms/iep-pubsub",
     "node-fetch": "^2.6.0",
     "urlencode": "^1.1.0"
   },
   "devDependencies": {
     "ava": "^3.8.2",
-    "esm-fake-loader": "^1.0.1"
+    "esm-fake-loader": "^1.3.10"
   },
   "ava": {
     "nodeArguments": [
