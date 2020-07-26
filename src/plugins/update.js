@@ -4,7 +4,7 @@ import stamp from '../utils/stamp';
 
 export default ({ iepMap, iepCache }) => {
   const srcMap = cache('srcMap', iepCache);
-  const { '--cache-persist-url': stampedPath } = iepCache;
+  const { '--srcMap-persist-url': stampedPath } = iepCache;
   const iepRoot = '/' + stampedPath.split('/').pop();
   const stampRoot = stampedPath.replace(iepRoot, '');
 
@@ -22,7 +22,7 @@ export default ({ iepMap, iepCache }) => {
       }
       const iepName = `${iepRoot}/${name}.${md5}.${type}`;
       const srcPath = `${stampRoot}${iepName}`;
-      srcMap.set(srcPath, { source: data.toString() });
+      srcMap.set(srcPath, data.toString());
 
       const alias = type === 'js' ? name : `${name}.${type}`;
       const stamped = stamp({

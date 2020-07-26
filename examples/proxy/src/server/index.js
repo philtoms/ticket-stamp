@@ -23,16 +23,11 @@ export default (options) => {
 
   const app = express();
 
-  const stampedPath = path.resolve(__dirname, '../../stamped');
-  const modPath = path.resolve(__dirname, '../../node_modules');
-
   const { imports, proxy, render } = iep(config);
 
   app.use(compression());
 
   // ticket stamp
-  app.use('/stamped', express.static(stampedPath));
-  app.use('/node_modules', express.static(modPath));
   app.use(ticketStamp(config));
 
   // iep
@@ -43,6 +38,6 @@ export default (options) => {
   app.use(errorHandler({ log }), (err, req, res, next) => {});
 
   const listener = app.listen(process.env.PORT || 8080, () => {
-    console.log('Your app is listening on port ' + listener.address().port);
+    log.info('Your app is listening on port ' + listener.address().port);
   });
 };

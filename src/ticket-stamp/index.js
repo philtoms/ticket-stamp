@@ -5,14 +5,16 @@ import bodyparser from 'body-parser';
 import fileupload from 'express-fileupload';
 import cache from 'iep-cache';
 import middleware from 'iep-middleware';
+import config from './config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const stamp = express();
 
-export default (config) => {
-  const { plugins, iepCache } = config;
+export default (_opts) => {
+  const opts = config(_opts);
+  const { plugins, iepCache } = opts;
 
   const iepMap = cache('iepMap', {
     ...iepCache,
@@ -21,7 +23,7 @@ export default (config) => {
 
   const paths = [path.resolve(__dirname, '../plugins')];
   const { load, bind } = middleware({
-    ...config,
+    ...opts,
     iepMap,
     paths,
     ctx: 'stamp',
