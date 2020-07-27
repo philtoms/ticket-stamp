@@ -31,7 +31,7 @@ export default ({ iepMap }) => async (req, res, next) => {
       return next({ payload: prod[0], message: prod[0] });
     }
     iepMap.set(ticket, stamped);
-    return next({ payload: stamped, message: stamped });
+    return next({ status: 200, payload: stamped, message: stamped });
   }
 
   res.status(404).send(`unrecognized ticket ${ticket}`);

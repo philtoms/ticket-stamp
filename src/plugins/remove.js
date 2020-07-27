@@ -8,5 +8,5 @@ export default ({ iepMap }) => async (req, res, next) => {
     (entry) => entry.ticket !== ticket
   );
   iepMap.set('prod', prod);
-  next({ payload: ticket, message: ticket });
+  next({ status: 200, payload: ticket, message: ticket });
 };

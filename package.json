@@ -17,14 +17,15 @@
     "express": "^4.17.1",
     "express-fileupload": "^1.1.7-alpha.3",
     "form-data": "^3.0.0",
-    "node-fetch": "^2.6.0",
-    "urlencode": "^1.1.0",
     "iep": "philtoms/iep",
-    "iepcache": "philtoms/iep-cache"
+    "iep-cache": "philtoms/iep-cache",
+    "iep-middleware": "philtoms/iep-middleware",
+    "node-fetch": "^2.6.0",
+    "urlencode": "^1.1.0"
   },
   "devDependencies": {
     "ava": "^3.8.2",
-    "esm-fake-loader": "^1.0.1"
+    "esm-fake-loader": "^1.3.10"
   },
   "ava": {
     "nodeArguments": [
