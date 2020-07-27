@@ -11,6 +11,7 @@ import ticketStamp from '../../../../src/ticket-stamp';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const jiraPath = path.resolve(__dirname, '../../jira-connect');
 
 const consoleTransport = new winston.transports.Console();
 const myWinstonOptions = {
@@ -22,6 +23,8 @@ export default (options) => {
   const config = { ...options, log };
 
   const app = express();
+
+  app.use('/jira-connect', express.static(jiraPath));
 
   const { imports, proxy, render } = iep(config);
 

@@ -1,0 +1,26 @@
+{
+  "name": "Ticket Stamp",
+  "description": "Atlassian Connect app for Ticket-Stamp",
+  "key": "com.jira.ticketstamp",
+  "baseUrl": "https://a370eb4960ae.ngrok.io/connect/jira",
+  "vendor": {
+    "name": "Intentional Dev",
+    "url": "http://intentional-dev.com"
+  },
+  "authentication": {
+    "type": "none"
+  },
+  "apiVersion": 1,
+  "modules": {
+    "generalPages": [
+      {
+        "url": "/hello-world.html",
+        "key": "ticket-stamp",
+        "location": "system.top.navigation.bar",
+        "name": {
+          "value": "Greeting"
+        }
+      }
+    ]
+  }
+}
